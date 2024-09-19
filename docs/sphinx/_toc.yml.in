@@ -1,0 +1,14 @@
+defaults:
+  numbered: False
+  maxdepth: 6
+root: index
+subtrees:
+- caption: How To
+  entries:
+  - file: how-to/single-node-config
+    title: Single Node Networking
+  - file: how-to/multi-node-config
+    title: Multi Node Networking
+- caption: Reference
+  entries:
+  - file: reference/hardware-support
