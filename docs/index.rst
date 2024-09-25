@@ -3,7 +3,7 @@
    :keywords: network validation, DCGPU, PCIe, Infiniband, RoCE, ROCm, RCCL, machine learning, LLM, usage, tutorial
 
 ************************************************************************
-Cluster Network Performance Validation for AMD Instinct GPU Accelerators
+Cluster Network Performance Validation for AMD Instinct™ GPU Accelerators
 ************************************************************************
 
 When running AI/HPC applications in a cluster network environment, performance is only as fast as the slowest individual node. It is therefore imperative that you configure each server for maximum data transfer rate and bandwidth usage with respect to hardware, then validate host and device-based performance over your network in single and multi node capacities with the appropriate benchmarking tools. 

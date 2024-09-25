@@ -3,7 +3,7 @@
    :keywords: network validation, DCGPU, single node, ROCm, RCCL, machine learning, LLM, usage, tutorial
 
 ********************************************************
-Single node network configuration for AMD Instinct GPUs
+Single node network configuration for AMD Instinct™ GPUs
 ********************************************************
 
 This guide explains how to set up a testing environment on a single GPU node and run benchmarks to simulate an AI/HPC workload.
