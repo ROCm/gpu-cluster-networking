@@ -3,7 +3,7 @@
    :keywords: network validation, DCGPU, multi node, ROCm, RCCL, machine learning, LLM, usage, tutorial
 
 ******************************************************
-Multi node network configuration for AMD Instinct GPUs
+Multi node network configuration for AMD Instinct™ GPUs
 ******************************************************
 
 With single node configuration testing completed and verified, we can move on to validating network connections in node pairs. All the tests described in this guide must be run between two nodes in a client-server relationship. Both nodes must be configured and verified per the :doc:`Single node configuration guide<single-node-config>` before running any node-to-node performance tests.

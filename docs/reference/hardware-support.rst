@@ -2,9 +2,9 @@
 Hardware Support Matrix
 ************************
 
-The processes detailed in these guides are validated to run on the following hardware in tandem with AMD Instinct GPUs:
+The processes detailed in these guides are validated to run on the following hardware in tandem with AMD Instinct™ GPUs:
 
-Network Cards for AMD MI300X
+Network Cards for AMD Instinct™ MI300X
 ============================
 
 +--------------------------+---------+---------------------+
@@ -21,7 +21,7 @@ Network Cards for AMD MI300X
 | Nvidia ConnectX-7 series | 400Gb/s | RoCEv2 / InfiniBand |
 +--------------------------+---------+---------------------+
 
-Network Cards for AMD MI100X and MI200X
+Network Cards for AMD Instinct™ MI100X and MI200X
 =======================================
 
 +--------------------------+---------+---------------------+
