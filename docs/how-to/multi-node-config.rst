@@ -1,41 +1,53 @@
 .. meta::
-   :description: How to configure multiple nodes for testing
+   :description: Learn how to configure multiple nodes for network testing.
    :keywords: network validation, DCGPU, multi node, ROCm, RCCL, machine learning, LLM, usage, tutorial
 
-******************************************************
-Multi node network configuration for AMD Instinct™ GPUs
-******************************************************
+**************************************************************
+Multi-node network configuration for AMD Instinct accelerators
+**************************************************************
 
-With single node configuration testing completed and verified, we can move on to validating network connections in node pairs. All the tests described in this guide must be run between two nodes in a client-server relationship. Both nodes must be configured and verified per the :doc:`Single node configuration guide<single-node-config>` before running any node-to-node performance tests.
+After single node configuration testing has been completed and verified, validate network connections in node pairs. All the tests described in this topic must be run between two nodes in a client-server relationship. Both nodes
+must be configured and verified according to :doc:`./single-node-config`
+before running any node-to-node performance tests.
 
 .. _Multinode-Prerequisites:
 
 Prerequisites
 =============
 
-Before following the steps in this guide, ensure you have performed these actions first:
+Before following the steps in this guide, complete the following prerequisites.
 
-* Install all required software for MPI in the `ROCm documentation <https://rocm.docs.amd.com/en/latest/how-to/gpu-enabled-mpi.html>`_.
-  
-  * Specifically, follow the installation instructions for Open MPI, OSU benchmarks, and collective operations.
+* Install all required software for MPI in the
+  :doc:`ROCm documentation <rocm:how-to/gpu-enabled-mpi>`.
 
-* Install `Slurm Workload Manager <https://slurm.schedmd.com/quickstart_admin.html>`_ (if applicable).
+  * Specifically, follow the installation instructions for Open MPI, OSU
+    benchmarks, and collective operations.
+
+* Install `Slurm Workload Manager <https://slurm.schedmd.com/quickstart_admin.html>`_
+  (if applicable). Refer to the
+  `Slurm Workload Manager documentation <https://slurm.schedmd.com/documentation.html>`_.
 
 * Implement passwordless SSH.
 
 Evaluate platform-specific BIOS tunings
 ---------------------------------------
 
-Check your BIOS settings to make sure they are optimized for AMD GPUs. See the `AMD Instinct Optimization Guides <https://rocm.docs.amd.com/en/latest/how-to/system-optimization/index.html>`_ for more details.
+Check your BIOS settings to make sure they are optimized for AMD GPUs. See the
+:doc:`AMD Instinct system optimization guides <rocm:how-to/system-optimization/index>`
+for more information.
 
-* Enable large bar addressing in the BIOS to support peer to peer GPU memory access.
-* Verify SRIOV is enabled, if needed.
+* Enable large bar addressing in the BIOS to support peer to peer GPU memory
+  access.
+
+* Verify SR-IOV is enabled, if needed.
+
 * Disable ACS (ACS forces P2P transactions through the PCIe root complex).
 
-.. Note::
-    If using virtual devices, AER and ACS should be enabled.
+.. note::
 
-Single Tier Switch Configuration
+   If using virtual devices, AER and ACS should be enabled.
+
+Single tier switch configuration
 --------------------------------
 
 Take these actions on each single tier (leaf/edge) switch you plan to include in network testing.
@@ -44,20 +56,30 @@ Take these actions on each single tier (leaf/edge) switch you plan to include in
 
 #. Verify the switch sees all hosts and ports are active.
 
-#. For an InfiniBand switch, configure Fabric Manager on the switch or start OpenSM on a host in the network if a subnet manager isn't already in place.
+#. For an InfiniBand switch, configure Fabric Manager on the switch or start
+   OpenSM on a host in the network if a subnet manager isn't already in place.
 
-#. For an ethernet switch, configure MTU size and priority flow control (PFC) and ECN support as needed.
+#. For an ethernet switch, configure MTU size and priority flow control (PFC)
+   and ECN support as needed.
 
 #. Clear all port counters after the switch is ready to use.
 
 .. _OFED-Perftest-installation-and-benchmarking:
 
-OFED Perftest installation and benchmarking
+OFED perftest installation and benchmarking
 ============================================
 
-Install and run the `OFED performance tests <https://github.com/linux-rdma/perftest>`_ for host to host (H2H) testing. Loopback is implemented in the tests to remove the switch from benchmark results. Remember to install OFED Perfests on both nodes you plan to use in this section. Commands may require ``sudo`` depending on user privileges.
+Install and run the `OFED performance tests <https://github.com/linux-rdma/perftest>`_
+for host to host (H2H) testing. Loopback is implemented in the tests to remove
+the switch from benchmark results. Remember to install OFED perftests on both
+nodes you plan to use in this section. Commands may require ``sudo`` depending
+on user privileges.
 
-#. From the CLI of your host, run ``git clone https://github.com/linux-rdma/perftest.git``.
+#. From the CLI of your host, clone the 
+
+   .. code-block:: shell
+
+      git clone https://github.com/linux-rdma/perftest.git
 
 #. Navigate to the installation directory and build the tests.
 
@@ -67,133 +89,152 @@ Install and run the `OFED performance tests <https://github.com/linux-rdma/perft
       ./autogen.sh
       ./configure --prefix=$PWD/install --enable-rocm --with-rocm=/opt/rocm
 
-#. Locate and open ``Makefile`` in your editor of choice, then append ``-D__HIP_PLATFORM_AMD__`` to ``CFLAGS`` and ``CXXFLAGS`` (lines 450 and 458 at the time of publication). This is required to compile the code correctly for this guide.
+#. Locate and open ``Makefile`` in your editor of choice, then append
+   ``-D__HIP_PLATFORM_AMD__`` to ``CFLAGS`` and ``CXXFLAGS``. This is required
+   to compile the code correctly for this guide.
 
 #. Run ``make && make install``.
 
 #. Repeat these steps on a second node connected to the same switch.
 
-Run Host-based (CPU) Performance Tests 
-========================================
+Run host-based (CPU) performance tests
+======================================
 
-Once installed, there are six main modules available with OFED Perftests:
+Once installed, there are six main modules available with OFED perftests:
 
-* ib_write_bw - Test bandwidth with RDMA write transactions.
-* ib_write_lat - Test latency with RDMA write transactions.
-* ib_read_bw - Test bandwidth with RDMA read transactions.
-* ib_read_lat - Test latency with RDMA read transactions.
-* ib_send_bw - Test bandwidth with send transactions.
-* ib_send_lat - Test latency with send transactions.
+* ``ib_write_bw`` - Test bandwidth with RDMA write transactions.
 
-The examples in this section use ib_send_bw, but you may accomplish similar with any other test you require. The goal of the tests in this section is to verify high speed Host to Host (H2H) data transfer rates between nodes prior to including GPU traffic, therefore the ``use_rocm`` flag is avoided in all commands.
+* ``ib_write_lat`` - Test latency with RDMA write transactions.
 
-Run H2H RDMA Benchmark
+* ``ib_read_bw`` - Test bandwidth with RDMA read transactions.
+
+* ``ib_read_lat`` - Test latency with RDMA read transactions.
+
+* ``ib_send_bw`` - Test bandwidth with send transactions.
+
+* ``ib_send_lat`` - Test latency with send transactions.
+
+The examples in this section use ``ib_send_bw``, but you can accomplish similar
+with any other test you require. The goal of the tests in this section is to
+verify high speed Host to Host (H2H) data transfer rates between nodes before
+including GPU traffic, therefore the ``use_rocm`` flag is avoided in all commands.
+
+The examples in this section use the ``ib_send_bw`` tool, but you can achieve
+similar results with other benchmarking tools, depending on your requirements.
+The primary objective of these tests is to verify high-speed Host-to-Host (H2H)
+data transfer rates between nodes before introducing GPU traffic--as a result,
+the ``use_rocm`` flag is intentionally omitted from all commands.
+
+Run H2H RDMA benchmark
 -----------------------
 
-To run the OFED perftest, establish an SSH connection to both nodes you installed the OFED perftests on.
+To run the OFED perftest, establish an SSH connection to both nodes you
+installed the OFED perftests on.
 
 #. Initiate a server connection on the first node:
 
-    .. code-block:: shell
-        
-        $ cd perftest   #if not already in directory
-        
-        $ numactl -C 1 ./ib_send_bw -a -F -d <IB/RoCE interface>
-      
-        ************************************
-        * Waiting for client to connect... *
-        ************************************
+   .. code-block:: shell-session
+
+      $ cd perftest   #if not already in directory
+
+      $ numactl -C 1 ./ib_send_bw -a -F -d <IB/RoCE interface>
+
+      ************************************
+      * Waiting for client to connect... *
+      ************************************
 
 #. Initiate a client connection on the second node:
 
-    .. code-block:: shell
+   .. code-block:: shell-session
 
-        $ cd perftest   #if not already in directory
-        
-        $ numactl -C 1 ./ib_send_bw <node1 IP> -a -F -d <IB/RoCE interface>
+      $ cd perftest   #if not already in directory
+
+      $ numactl -C 1 ./ib_send_bw <node1 IP> -a -F -d <IB/RoCE interface>
 
 #. Test should run and complete in several moments.
-      
+
    .. note::
-      The use of ``numactl`` or ``taskset`` commands makes sure NUMA domains are not crossed when communicating, which can create overhead and latency. When running tests you must ensure you use cores local to the network device.
 
-Consult this table for an explanation of flags used in the ``numactl`` examples and other optional flags that may be useful for you.
+      The use of ``numactl`` or ``taskset`` commands makes sure NUMA domains are
+      not crossed when communicating, which can create overhead and latency.
+      When running tests you must ensure you use cores local to the network
+      device.
 
-.. raw:: html
+Consult this table for an explanation of flags used in the ``numactl`` examples
+and other optional flags that may be useful for you.
 
-   <style>
-     #perftest-commands-table tr td:last-child {
-       font-size: 0.9rem;
-     }
-   </style>
+-d <IB/RoCE interface>
+  Specifies a NIC to use. Ensure you use a NIC that is both adjacent to a GPU and not crossing NUMA domains or otherwise needing pass traffic between CPUs before egressing from the host. Tools like ``rocm-smi --showtopo`` and ``lstopo`` can help define which NICs are adjacent to which GPUs.
 
-.. container::
-   :name: perftest-commands-table
+-p <port #>
+  Assign a port number to the server/client. Each instance must run on a different port when executed simultaneously.
 
-   .. list-table::
-      :header-rows: 1
-      :stub-columns: 1
-      :widths: 2 5
+--report_gbits
+  Reports in Gb/s instead of Mb/s.
 
-      * - Flag
-        - Description
+-m <mtu>
+  Set MTU size.
 
-      * - -d <IB/RoCE interface>
-        - Specifies a NIC to use. Ensure you use a NIC that is both adjacent to a GPU and not crossing NUMA domains or otherwise needing pass traffic between CPUs before egressing from the host. Tools like ``rocm-smi --showtopo`` and ``lstopo`` can help define which NICs are adjacent to which GPUs.
+-b
+  Bidirectional runs.
 
-      * - -p <port #>
-        -  Assign a port number to the server/client, when running simultaneously you must use different ports.
+-a 
+  Runs messages in all sizes.
 
-      * - --report_gbits
-        - Reports in Gb/s instead of Mb/s.
+-n <number> 
+  Provides the number of iterations.
 
-      * - -m <mtu>
-        - Set MTU size.
-    
-      * - -b
-        - Bidirectional runs.
+-F
+  Do not show warning if cpufreq_ondemand is loaded.
 
-      * - -a 
-        - Runs messages in all sizes.
+--use_rocm=<rocm_device_number>
+  This is for device testing, allows you to specify which GPU to use. Zero-based numbering. 
 
-      * - -n <number> 
-        - Provides the number of iterations.
+--perform_warm_up 
+  Runs several iterations before benchmarking to warm up memory cache.
 
-      * - -F
-        - Do not show warning if cpufreq_ondemand is loaded.
+As servers typically have one NIC per GPU, you must change the device location
+frequently as you iterate through tests. 
 
-      * - --use_rocm=<rocm_device_number>
-        - This is for device testing, allows you to specify which GPU to use. Zero-based numbering. 
-     
-      * - --perform_warm_up 
-        - Runs several iterations before benchmarking to warm up memory cache.
-
-As servers typically have one NIC per GPU, you must change the device location frequently as you iterate through tests. 
-
-Run Multithreaded H2H RDMA Benchmark
+Run multithreaded H2H RDMA benchmark
 -------------------------------------
 
-You can multithread an OFED perftest by running it simultaneously on each NIC in the server. Use ``taskset`` to select a CPU core on the same NUMA domain as the NICs. Although testing the XGMI/Infinity Fabric link between CPUs is not a goal at this point, it's an option if preferred.
+To perform a multithreaded RDMA benchmark using the OFED perftest, run it
+concurrently on each NIC in the server. Use the ``taskset`` command to assign a
+CPU core within the same NUMA domain as the NICs. While testing the
+XGMI/Infinity Fabric link between CPUs is not required at this stage, it can be
+an optional test if desired.
 
-Run Extended Multithreaded H2H RDMA Benchmark
+Run extended multithreaded H2H RDMA benchmark
 ---------------------------------------------
 
-Run the previous test, but this time loop it and run it for a minimum of 8 hours. The goal is to stress the IO network on the fabric over a long period of time.
+Repeat the multithreaded RDMA benchmark, but loop the test and run it
+continuously for at least 8 hours. This extended test is designed to stress the
+I/O network fabric over a prolonged period to assess stability and performance
+under sustained load.
 
-Run Device-based (GPU) OFED Performance Tests
+Run device-based (GPU) OFED performance tests
 =============================================
 
-Once H2H performance is verified, you can run the Device to Device (D2D) OFED perftests that include GPU traffic.
+After confirming Host-to-Host (H2H) performance, proceed to run Device-to-Device
+(D2D) OFED perftests, which include GPU traffic. This will evaluate RDMA
+performance between GPUs.
 
 Run D2D RDMA benchmark
 -----------------------
 
-Use this example to run an OFED perftest between GPUs in pairs (GPU0 to GPU1, GPU2 to GPU3, and so on). 
+To run a D2D RDMA benchmark, use the following example setup to test GPU pairs--for
+example, GPU0 to GPU1, GPU2 to GPU3.
 
 .. note::
-   If you have Mellanox/Nvidia NICs, be aware that the default OFED perftest installation doesn't include ROCm support. Follow the :ref:`installation instructions<OFED-Perftest-installation-and-benchmarking>` if you haven't done so already.
 
-In this example, localhost is used by the client to call the server. You may use a specific IP address to ensure the network is tested.
+   If you have Mellanox or NVIDIA NICs, be aware that the default OFED perftest
+   installation doesn't include ROCm support. Follow the
+   :ref:`installation instructions<OFED-Perftest-installation-and-benchmarking>`
+   if you haven't done so already.
+
+In this example, ``localhost`` is used by the client to call the server. You may
+use a specific IP address to ensure the network is tested.
 
 .. code-block:: shell
 
@@ -246,14 +287,18 @@ In this example, localhost is used by the client to call the server. You may use
    ---------------------------------------------------------------------------------------
 
 .. note::
-   If you run the test with different values for ``--use_rocm=#`` on the server and the client, the output will show results from whichever GPU is local to the node you're looking at. The tool is unable to show server and client simultaneously.
 
-Run H2D/D2H RDMA Benchmark
+   If you run the test with different values for ``--use_rocm=#`` on the server
+   and the client, the output will show results from whichever GPU is local to
+   the node you're looking at. The tool is unable to show server and client
+   simultaneously.
+
+Run H2D/D2H RDMA benchmark
 ---------------------------
 
 This is similar to the D2D test, but also includes the CPU on either the server or client side of the test-case scenarios. 
 
-For a 2-CPU/8-GPU node you would have have 32 test scenarios per pairs of server.
+For a 2-CPU/8-GPU node you would have 32 test scenarios per pairs of server.
 
 .. list-table:: H2D/D2H Benchmark with Server-Side CPUs
    :widths: 25 25 25 25 25 25 25 25 25
@@ -301,69 +346,91 @@ For a 2-CPU/8-GPU node you would have have 32 test scenarios per pairs of server
      -
      -
 
-To run this test, use a command similar to the example in the D2D benchmark, but only add the ``--use_rocm`` flag on either the server or client side so that one node communicates with the GPUs while the other does so with CPUs. Then run the test a second time with the ``use_rocm`` flag on the other side. Continue to use the most adjacent NIC to the GPU or CPU being tested so that communication doesn't run between between intranode CPUs (testing the internal CPU-CPU fabric isn't a goal at this time). 
+To run this test, use a command similar to the example in the D2D benchmark, but
+only add the ``--use_rocm`` flag on either the server or client side so that one
+node communicates with the GPUs while the other does so with CPUs. Then, run the
+test a second time with the ``use_rocm`` flag on the other side. Continue to use
+the most adjacent NIC to the GPU or CPU being tested so that communication
+doesn't run between intra-node CPUs (testing the internal CPU-CPU fabric
+isn't a goal now). 
 
-D2D RDMA Multithread Benchmark
+D2D RDMA multithread benchmark
 ------------------------------
 
-For this test you must run the previous D2D benchmark simultaneously on all GPUs. Scripting is required to accomplish this, but the command input should resemble something like the following image with regard to your RDMA device naming scheme.
+For this test you must run the previous D2D benchmark simultaneously on all
+GPUs. Scripting is required to accomplish this, but the command input should
+resemble something like the following image with regard to your RDMA device
+naming scheme.
 
 .. image:: ../data/D2D-perftest-multithread.png
    :alt: multithread perftest input
 
 Important OFED perftest flags for this effort include:
 
-* ``-p <port#>`` - Lets you assign specific ports for server/client combinations. Each pair needs an independent port number so you don't inadvertently use the wrong server. 
+-p <port#>
+  Lets you assign specific ports for server/client combinations. Each pair needs an independent port number so you don't inadvertently use the wrong server. 
 
-* ``-n <# of iterations>`` - Default is 1000, you can increase this to have the test run longer. 
+-n <# of iterations>
+  Default is 1000, you can increase this to have the test run longer. 
 
-* For bandwidth tests only:
-  
-  * ``-D <seconds>`` - Defines how long the test runs for. 
-  
-  * ``--run_infinitely`` - Requires user to break the runtime, otherwise runs indefinitely. 
+For bandwidth tests only:
 
-D2D RDMA Multithread Extended Benchmark
+-D <seconds>
+  Defines how long the test runs for. 
+
+--run_infinitely
+  Requires user to break the runtime, otherwise runs indefinitely. 
+
+D2D RDMA multithread extended benchmark
 ---------------------------------------
 
-Perform the D2D RDMA multithread benchmark again but set the duration for a minimum of 8 hours.
+Perform the D2D RDMA multithread benchmark again but set the duration for a
+minimum of 8 hours.
 
 Build collective tests 
 ======================
 
-This section guides you through setting up the remaining tools necessary to simulate an AI workload on your GPU nodes after they have been sufficiently traffic-tested. Per the :ref:`prerequisites<Multinode-Prerequisites>`, UCX, UCC, MPI and the OSU benchmarks must already be installed.
+This section guides you through setting up the remaining tools necessary to
+simulate an AI workload on your GPU nodes after they have been sufficiently
+traffic-tested. Per the :ref:`prerequisites<Multinode-Prerequisites>`, UCX, UCC,
+MPI and the OSU benchmarks must already be installed.
 
 Install RCCL
 -------------
 
-RCCL is likely already installed as part of ROCm on your compute nodes. Sometimes newer features and fixes might be available in the latest version of RCCL, which you can build from source at https://github.com/ROCm/rccl.
+RCCL is likely already installed as part of ROCm on your compute nodes.
+Sometimes newer features and fixes might be available in the latest version of
+RCCL, which you can build from source at `<https://github.com/ROCm/rccl>`__.
 
-Build RCCL Collective Test
---------------------------
+Build RCCL collective tests
+---------------------------
 
-To more easily build and run the RCCL collective tests, review and implement the script provided in the drop-down (the script also includes an option to install MPICH if needed). Otherwise, you can follow the steps to manually install at https://github.com/ROCm/rccl-tests. 
+To more easily build and run the RCCL collective tests, review and implement the
+script provided in the drop-down (the script also includes an option to install
+MPICH if needed). Otherwise, you can follow the steps to manually install at
+`<https://github.com/ROCm/rccl-tests>`__.
 
-.. dropdown:: build-and-run_rccl-tests_sweep_multinode.sh
+.. dropdown:: `build-and-run_rccl-tests_sweep_multinode.sh`
 
     .. code-block:: shell
       :linenos:
 
       #!/bin/bash -x
-  
+
       ## change this if ROCm is installed in a non-standard path
       ROCM_PATH=/opt/rocm
-      
+
       ## to use pre-installed MPI, change `build_mpi` to 0 and ensure that libmpi.so exists at `MPI_INSTALL_DIR/lib`.
       build_mpi=1
       MPI_INSTALL_DIR=/opt/ompi
-      
+
       ## to use pre-installed RCCL, change `build_rccl` to 0 and ensure that librccl.so exists at `RCCL_INSTALL_DIR/lib`.
       build_rccl=1
       RCCL_INSTALL_DIR=${ROCM_PATH}
-      
-      
+
+
       WORKDIR=$PWD
-      
+
       ## building mpich
       if [ ${build_mpi} -eq 1 ]
       then
@@ -382,8 +449,8 @@ To more easily build and run the RCCL collective tests, review and implement the
           fi
           MPI_INSTALL_DIR=${WORKDIR}/mpich/install
       fi
-      
-      
+
+
       ## building rccl (develop)
       if [ ${build_rccl} -eq 1 ]
       then
@@ -396,8 +463,8 @@ To more easily build and run the RCCL collective tests, review and implement the
           fi
           RCCL_INSTALL_DIR=${WORKDIR}/rccl/build/release
       fi
-      
-      
+
+
       ## building rccl-tests (develop)
       cd ${WORKDIR}
       if [ ! -d rccl-tests ]
@@ -406,38 +473,36 @@ To more easily build and run the RCCL collective tests, review and implement the
           cd rccl-tests
           make MPI=1 MPI_HOME=${MPI_INSTALL_DIR} NCCL_HOME=${RCCL_INSTALL_DIR} -j
       fi
-      
-      
+
+
       ## running multi-node rccl-tests all_reduce_perf for 1GB
       cd ${WORKDIR}
-      
+
       ## requires a hostfile named hostfile.txt for the multi-node setup in ${WORKDIR}/
-      
+
       n=`wc --lines < hostfile.txt`   # count the numbers of nodes in hostfile.txt
       echo "No. of nodes: ${n}"       # print number of nodes
       m=8                             # assuming 8 GPUs per node
       echo "No. of GPUs/node: ${m}"   # print number of GPUs per node
       total=$((n * m))                # total number of MPI ranks (1 per GPU)
       echo "Total ranks: ${total}"    # print number of GPUs per node
-      
+
       ### set these environment variables if using Infiniband interconnect
       ## export NCCL_IB_HCA=^mlx5_8
-      
+
       ### set these environment variables if using RoCE interconnect
       ## export NCCL_IB_GID_INDEX=3
-      
+
       for coll in all_reduce all_gather alltoall alltoallv broadcast gather reduce reduce_scatter scatter sendrecv
       do
           # using MPICH; comment next line if using OMPI
           mpirun -np ${total} --bind-to numa -env NCCL_DEBUG=VERSION -env PATH=${MPI_INSTALL_DIR}/bin:${ROCM_PATH}/bin:$PATH -env LD_LIBRARY_PATH=${RCCL_INSTALL_DIR}/lib:${MPI_INSTALL_DIR}/lib:$LD_LIBRARY_PATH ${WORKDIR}/rccl-tests/build/${coll}_perf -b 1 -e 16G -f 2 -g 1 2>&1 | tee ${WORKDIR}/stdout_rccl-tests_${coll}_1-16G_nodes${n}_gpus${total}.txt
-      
+
           ## uncomment, if using OMPI
           ## mpirun -np ${total} --bind-to numa -x NCCL_DEBUG=VERSION -x PATH=${MPI_INSTALL_DIR}/bin:${ROCM_PATH}/bin:$PATH -x LD_LIBRARY_PATH=${RCCL_INSTALL_DIR}/lib:${MPI_INSTALL_DIR}/lib:$LD_LIBRARY_PATH --mca pml ucx --mca btl ^openib ${WORKDIR}/rccl-tests/build/${coll}_perf -b 1 -e 16G -f 2 -g 1 2>&1 | tee ${WORKDIR}/stdout_rccl-tests_${coll}_1-16G_nodes${n}_gpus${total}.txt
-      
+
           sleep 10
       done
-
-.. Add or link to the RCCL config script once it's cleared for publication.
 
 Run OSU Micro Benchmarks
 =========================
@@ -451,10 +516,10 @@ This section covers the the two types of OMB:
 
 In a typical use case, you start with a pair of nodes and run the pt2pt benchmarks then move on to collectives. 
 
-Point to Point (pt2pt) OSU Benchmarks
+Point to point (pt2pt) OSU benchmarks
 -------------------------------------
 
-Commands in the table below must run on two nodes with RoCE or Infiniband interconnect from Host to Host (CPU to CPU). You can invoke the command from either node, but directories must mirror one another or the tests will hang.
+Commands in the table below must run on two nodes with RoCE or InfiniBand interconnect from Host to Host (CPU to CPU). You can invoke the command from either node, but directories must mirror one another or the tests will hang.
 
 .. note::
    The paths for the MPI and OMB commands presume both are installed in the ``/opt`` directory. Installation paths for your environment may be different and should be updated accordingly.  
@@ -479,23 +544,23 @@ Commands in the table below must run on two nodes with RoCE or Infiniband interc
         - Usage
 
       * - osu_bw
-        - $OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_bw -d rocm
+        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_bw -d rocm``
 
       * - osu_bibw
-        - $OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_bibw -d rocm 
+        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_bibw -d rocm``
 
       * - osu_mbw_mr
-        - $OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_mbw_mr -d rocm
+        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_mbw_mr -d rocm``
 
       * - osu_latency
-        - /$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency -d rocm
+        - ``/$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency -d rocm``
 
       * - osu_multi_lat
-        - $OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_multi_lat -d rocm 
+        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_multi_lat -d rocm``
 
 You can change communications mode by appending ``D D`` to the end of command for D2D, or ``D H`` for D2H (and vice-versa).
 
-Collective OSU Benchmarks
+Collective OSU benchmarks
 -------------------------
 
 .. raw:: html
@@ -518,48 +583,34 @@ Collective OSU Benchmarks
         - Usage
 
       * - osu_allreduce
-        - /opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allreduce -d rocm D D
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allreduce -d rocm D D``
       
       * - osu_allreduce 2N 16Proc
-        - /opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allreduce -d rocm D D
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allreduce -d rocm D D``
 
       * - osu_alltoall
-        - /opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D``
 
       * - osu_alltoall 2N 16Proc
-        - /opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D``
 
       * - osu_allgather
-        - /opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
 
       * - osu_allgather 2N 16Proc
-        - /opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
 
-Run RCCL Collective Benchmark
+Run RCCL collective benchmark
 =============================
 
-RCCL is a collective communication library optimized for collective operations by multi-GPU and multi-node communication primitives that are in turn optimized for AMD Instinct GPUs. The RCCL Test is typically launched using MPI, but you can use MPICH or Open MPI as well. 
+RCCL is a collective communication library optimized for collective operations
+by multi-GPU and multi-node communication primitives that are in turn optimized
+for AMD Instinct accelerators. The RCCL Test is typically launched using MPI,
+but you can use MPICH or Open MPI as well. 
 
 .. list-table::
    :stub-columns: 1
    :widths: 2 5
 
    * - RCCL with MPI
-     - /opt/ompi/bin/mpirun -mca oob_tcp_if_exclude docker,lo -mca btl_tcp_if_exclude docker,lo -host {HOST1}:8,{HOST2}:8 -np 16 -x LD_LIBRARY_PATH=/opt/rccl/build/rccl/install/lib:/opt/ompi/lib -x NCCL_IB_GID_INDEX=3 -x NCCL_DEBUG=VERSION -x NCCL_IB_HCA=bnxt_re0,bnxt_re1,bnxt_re2,bnxt_re3,bnxt_re4,bnxt_re5,bnxt_re6,bnxt_re7 -x NCCL_IGNORE_CPU_AFFINITY=1 /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1
-
-Reference Documentation
-=======================
-
-* `ROCm Documentation <https://rocm.docs.amd.com/en/latest/>`_
-
-* `Slurm Workload Manager Documentation <https://slurm.schedmd.com/documentation.html>`_
-
-* `OFED Performance Test ReadMe <https://github.com/linux-rdma/perftest>`_
-
-* `RCCL Test Build Instructions <https://github.com/ROCm/rccl-tests>`_
-
-Resources and Helpful Links
-===========================
-
-* `AMD Infinity Hub <https://www.amd.com/en/developer/resources/infinity-hub.html>`_ 
-* `AMD ROCm Developer Hub <https://www.amd.com/en/developer/resources/rocm-hub.html>`_
+     - ``/opt/ompi/bin/mpirun -mca oob_tcp_if_exclude docker,lo -mca btl_tcp_if_exclude docker,lo -host {HOST1}:8,{HOST2}:8 -np 16 -x LD_LIBRARY_PATH=/opt/rccl/build/rccl/install/lib:/opt/ompi/lib -x NCCL_IB_GID_INDEX=3 -x NCCL_DEBUG=VERSION -x NCCL_IB_HCA=bnxt_re0,bnxt_re1,bnxt_re2,bnxt_re3,bnxt_re4,bnxt_re5,bnxt_re6,bnxt_re7 -x NCCL_IGNORE_CPU_AFFINITY=1 /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1``
