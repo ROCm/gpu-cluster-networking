@@ -1,63 +1,103 @@
 .. meta::
-   :description: How to configure a single node for testing
+   :description: Learn how to configure a single node for network testing.
    :keywords: network validation, DCGPU, single node, ROCm, RCCL, machine learning, LLM, usage, tutorial
 
-********************************************************
-Single node network configuration for AMD Instinct™ GPUs
-********************************************************
+***************************************************************
+Single-node network configuration for AMD Instinct accelerators
+***************************************************************
 
-This guide explains how to set up a testing environment on a single GPU node and run benchmarks to simulate an AI/HPC workload.
+This section explains setting up a testing environment on a single accelerator node and running benchmarks to simulate an AI or HPC workload.
 
 Prerequisites
 =============
 
-Before following the steps in this guide, ensure you have performed these actions first:
+Before following the steps in the following sections, ensure you have completed
+these prerequisites.
 
-* Install GPU and network hardware.
+#. Install GPU and network hardware. Refer to the
+   :ref:`hardware support matrix </reference/hardware-support>`.
 
-* Install OS and required GPU and network software on each node:
-  
-  * `Install ROCm <https://rocm.docs.amd.com/en/latest/deploy/linux/quick_start.html>`_.
-  
-  * Install network drivers for NICs (add opensm if using InfiniBand).
+#. Install OS and required GPU and network software on each node:
 
-* Configure network.
+   * :doc:`Install the ROCm software stack <rocm-install-on-linux:index>`.
 
-* Configure system BIOS and OS settings according to the `system optimization guide <https://rocm.docs.amd.com/en/latest/how-to/system-optimization/index.html>`_ for your architecture (MI300, MI200, and so on).
+   * Install network drivers for NICs. If using InfiniBand, also install OpenSM.
 
-* Disable NUMA Balancing with ``sudo sysctl kernel.numa_balancing=0``. To verify NUMA balancing is disabled, run ``cat /proc/sys/kernel/numa_balancing`` and confirm that 0 is returned.
+#. Ensure network settings are correctly configured for your hardware.
 
-* Run the :ref:`disable ACS script<disable-acs-script>` to disable PCI ACS (Access Control Services) on all PCIe devices that support it (must be done on each reboot). 
+#. Configure system BIOS and OS settings according to
+   :doc:`rocm:how-to/system-optimization/index` for your architecture
+   (MI300, MI200, and so on).
 
-* Add the ``iommu=pt``parameter to ``GRUB_CMDLINE_LINUX_DEFAULT`` in ``/etc/default/grub``, then run ``sudo update-grub`` and reboot. See `ROCm troubleshooting <https://rocm.docs.amd.com/projects/install-on-linux/en/develop/reference/install-faq.html#issue-5-application-hangs-on-multi-gpu-systems>`_ for more information.
+#. Disable NUMA balancing.
 
-* Verify your user belongs to the ``render`` and ``video`` groups as specified in the `group permission settings <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/prerequisites.html#setting-permissions-for-groups>`_ for ROCm installation.
+   a. Run ``sudo sysctl kernel.numa_balancing=0``.
 
-Best Practices
---------------
+   b. To verify NUMA balancing is disabled, run
+      ``cat /proc/sys/kernel/numa_balancing`` and confirm that ``0`` is
+      returned.
 
-Applications must be the same on every system. There are two ways to accomplish this: 
+   c. See :ref:`rocm:mi300x-disable-numa` for more information.
 
-#. Have an NFS mount available to all systems where the software is installed. 
+#. Disable PCI ACS (access control services). Run the
+   :ref:`disable ACS script<disable-acs-script>` on all PCIe devices supporting
+   it. This must be done after each reboot.
 
-#. Make a system image with all the software installed. Note that you must re-image anytime there is a software change.
+#. Configure IOMMU settings.
+
+   a. Add ``iommu=pt`` to the ``GRUB_CMDLINE_LINUX_DEFAULT`` entry in
+      ``/etc/default/grub``.
+
+   b. Run ``sudo update-grub``, then reboot.
+
+   c. See :ref:`rocm:mi300x-grub-settings` and
+      :ref:`rocm-install-on-linux:multi-gpu` for more information.
+
+#. Verify group permissions.
+
+   a. Ensure the user belongs to the ``render`` and ``video`` groups.
+
+   b. Refer to :ref:`rocm-install-on-linux:group_permissions` for guidance.
+
+Best practices for software consistency
+---------------------------------------
+
+To ensure consistent software configurations across systems:
+
+* Use a shared NFS (network file system) mount. Install the necessary software
+  on a common NFS mount accessible to all systems.
+
+* Create a system image with all the software installed. Re-image when software
+  changes are made.
 
 Validate PCIe performance
 =========================
 
-Checking that your relevant PCIe devices (GPUs, NICs, and internal switches) are using the maximum available transfer speed and width in their respective bus keeps you from having to troubleshoot any related issues in subsequent testing where it may not be obvious. As a best practice, it's helpful to gather all the PCIe addresses for your GPUs, NICs, and switches in advance and document them so that you don't need to do it while following these steps.
+Checking that your relevant PCIe devices (GPUs, NICs, and internal switches) are
+using the maximum available transfer speed and width in their respective bus
+keeps you from having to troubleshoot any related issues in subsequent testing
+where it may not be obvious.
 
-Check PCIe Device Speed and Width
+.. tip::
+
+   Gather all the PCIe addresses for your GPUs, NICs, and switches in advance
+   and document them so that you don't need to do it while following these
+   steps.
+
+Check PCIe device speed and width
 ---------------------------------
 
-#. From the command line of your host, run ``lspci`` to retrieve a list of PCIe devices and locate your GPU and network devices.
+#. From the command line of your host, run ``lspci`` to retrieve a list of PCIe
+   devices and locate your GPU and network devices.
 
-#. Run ``sudo lspci -s <PCI address> -vvv | grep Speed`` to review the speed and width of your device. This example shows the speed and width for a GPU at the address ``02:00.0``.
+#. Run ``sudo lspci -s <PCI address> -vvv | grep Speed`` to review the speed and
+   width of your device. This example shows the speed and width for a GPU at the
+   address ``02:00.0``.
 
    .. tab-set::
 
-      .. tab-item:: Shell Output                       
-            
+      .. tab-item:: Shell output
+
          .. code-block:: shell
 
             $ sudo lspci -s 02:00.0 -vvv | grep Speed
@@ -66,97 +106,115 @@ Check PCIe Device Speed and Width
             LnkSta: Speed 32GT/s (ok), Width x16 (ok)      
 
       .. tab-item:: Commands       
-                              
+
          ::                                   
-                                       
+
             sudo lspci -s 02:00.0 -vvv | grep Speed
 
-   The maximum supported speed of the GPU is reported in ``LnkCap`` along with a width of x16. Current status is shown in ``LnkSta`` and we can see both speed and width are aligned. Your values may differ depending on your hardware.
+   The maximum supported speed of the GPU is reported in ``LnkCap`` along with
+   a width of x16. Current status is shown in ``LnkSta``--both speed and width
+   are aligned. Your values may differ depending on your hardware.
 
 #. Query and validate all GPUs in your node with the previous steps.
 
-#. Gather the PCI addresses for your NICs and validate them next. See this example from a NIC running at ``05:00.0``:
+#. Gather the PCI addresses for your NICs and validate them next. See this
+   example from a NIC running at ``05:00.0``:
 
    .. tab-set::
 
-      .. tab-item:: Shell Output                       
-            
+      .. tab-item:: Shell output
+
          .. code-block:: shell
 
             $ sudo lspci -s 05:00.0 -vvv | grep Speed
-            
+
             LnkCap: Port #0, Speed 16GT/s, Width x16, ASPM not supported
             LnkSta: Speed 16GT/s (ok), Width x16 (ok)      
 
-      .. tab-item:: Commands       
-                              
-         ::                                   
-                                       
+      .. tab-item:: Commands
+
+         ::
+
             sudo lspci -s 05:00.0 -vvv | grep Speed
 
-   Here, the NIC is running at a speed of 16GT/s. However, since the NIC configuration only supports PCIe Gen4 speeds this is an expected value. 
-   
-Once you verify all GPUs and NICs are running at maximum supported speeds and widths, then proceed to the next section.
+   Here, the NIC is running at a speed of 16GT/s. However, because the NIC
+   configuration only supports PCIe Gen4 speeds, this is an expected value.
+
+Once you verify all GPUs and NICs are running at maximum supported speeds and
+widths, then proceed to the next section.
 
 .. note::
-   If you are running a cloud instance, hardware passthrough to your guest OS may not be accurate. Verify your ``lspci`` results with your cloud provider.
 
-Check PCIe Switch Speed and Width
+   If you're running a cloud instance, hardware passthrough to your guest OS
+   might not be accurate. Verify your ``lspci`` results with your cloud
+   provider.
+
+Check PCIe switch speed and width
 ---------------------------------
 
-Similar to the previous section, you must next check the PCIe switches in your system to ensure they're reporting the maximum speed and width for ``LnkSta``.
+Now, check the PCIe switches to ensure they are operating at the maximum speed
+and width for the ``LnkSta`` (Link Status).
 
-#. Run ``lspci -vv`` and ``lspci -tv`` to identify PCIe switch locations on the server.
+#. Run ``lspci -vv`` and ``lspci -tv`` to identify PCIe switch locations on the
+   server.
 
-#. Run ``lspci -vvv <PCI address> | grep Speed`` to verify speed and width as previously demonstrated.
+#. Run ``lspci -vvv <PCI address> | grep Speed`` to verify speed and width as
+   previously demonstrated.
 
-Check Max Payload Size and Max Read Request
+Check max payload size and max read request
 -------------------------------------------
 
-The ``MaxPayload`` and ``MaxReadReq`` attributes determine the permissible size of individual PCIe packets and the number of read requests permitted at once, respectively. To optimize bandwidth, ensure every GPU and NIC reports the maximum value for both attributes. 
+The ``MaxPayload`` and ``MaxReadReq`` attributes define the maximum size of PCIe
+packets and the number of simultaneous read requests, respectively. For optimal
+bandwidth, ensure that all GPUs and NICs are configured to use the maximum
+values for both attributes.
 
-#. Run ``sudo lspci -vvv <PCI address> | grep DevCtl: -C 2`` to review max payload size and max read request. Here is an example using the same NIC as before.
+#. Run ``sudo lspci -vvv <PCI address> | grep DevCtl: -C 2`` to review max
+   payload size and max read request. Here is an example using the same NIC as
+   before.
 
    .. tab-set::
 
-      .. tab-item:: Shell Output                       
-            
-         .. code-block:: shell
+      .. tab-item:: Shell output
+
+         .. code-block:: shell-session
 
             $ sudo lspci -vvv 05:00.0 | grep DevCtl: -C 2
-            
+
             DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
                      ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 40.000W
             DevCtl: CorrErr+ NonFatalErr+ FatalErr+ UnsupReq-
                      RlxdOrd+ ExtTag+ PhantFunc- AuxPwr+ NoSnoop+ FLReset-
                      MaxPayload 512 bytes, MaxReadReq 4096 bytes     
 
-      .. tab-item:: Commands       
-                              
-         ::                                   
-                                       
+      .. tab-item:: Commands
+
+         ::
+
             sudo lspci -vvv 05:00.0 | grep DevCtl: -C 2
 
-#. ``MaxReadRequest`` is unique in that it can be changed during runtime with the ``setpci`` command. If your value here is lower than expected, you can correct it as follows:
+#. ``MaxReadRequest`` is unique because it can be changed during runtime with
+   the ``setpci`` command. If your value here is lower than expected, you can
+   correct it as follows:
 
    .. tab-set::
 
-      .. tab-item:: Shell Output                       
-            
+      .. tab-item:: Shell output
+
          .. code-block:: shell
 
-            $ sudo lspci -vvvs a1:00.0 | grep axReadReq     
-            
-            MaxPayload 512 bytes, MaxReadReq 512 bytes
-            
-            $ sudo setpci -s a1:00.0 68.w
-            
-            295e
-            
-            $ sudo setpci -s a1:00.0 68.w=595e
-            
             $ sudo lspci -vvvs a1:00.0 | grep axReadReq
-            
+
+            MaxPayload 512 bytes, MaxReadReq 512 bytes
+
+            $ sudo setpci -s a1:00.0 68.w
+
+            295e
+
+            $ sudo setpci -s a1:00.0 68.w=595e
+
+            $ sudo lspci -vvvs a1:00.0 | grep axReadReq
+
             MaxPayload 512 bytes, MaxReadReq 4096 bytes
 
       .. tab-item:: Commands
@@ -172,17 +230,24 @@ The ``MaxPayload`` and ``MaxReadReq`` attributes determine the permissible size 
             sudo lspci -vvvs a1:00.0 | grep axReadReq
 
 .. note::
-   Changes made with ``setpci`` are not persistent across reboots. This example uses a single NIC for simplicity, but in practice you must run the change for each NIC in the node.
 
-Validate NIC Configuration
+   Changes made with ``setpci`` are not persistent across reboots. This example
+   uses a single NIC for simplicity, but in practice you must run the change for
+   each NIC in the node.
+
+Validate NIC configuration
 ==========================
 
-After you've verified optimal PCIe speeds for all devices, configure your NICs according to best practices in the manufacturer or vendor documentation. This may already include some of the pre-assessment steps outlined in this guide and provide more hardware-specific tuning optimizations. 
+After you've verified optimal PCIe speeds for all devices, configure your NICs
+according to best practices in the manufacturer or vendor documentation. This
+might already include some of the pre-assessment steps outlined in this guide and
+provide more hardware-specific tuning optimizations. 
 
-Vendor-specific NIC Tuning
+Vendor-specific NIC tuning
 --------------------------
 
-Your NICs may require tuning if it has not already been done. Some steps differ based on the type of NIC you're deploying (InfiniBand or RoCE).
+Your NICs may require tuning if it has not already been done. Some steps differ
+based on the type of NIC you're deploying (InfiniBand or RoCE).
 
 * Ensure :ref:`ACS is disabled<disable-acs-script>`.
 
@@ -190,24 +255,28 @@ Your NICs may require tuning if it has not already been done. Some steps differ 
 
    .. code-block:: shell
 
-         sudo mst start
-         
-         sudo mst status
-         
-         sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s ADVANCED_PCI_SETTINGS=1
-         
-         sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s MAX_ACC_OUT_READ=44
-         
-         sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s PCI_WR_ORDERING=1
-         
-         reboot
+      sudo mst start
 
-* For Broadcom NICs, ensure RoCE is enabled and consider disabling any unused ports. See the :ref:`Broadcom RoCE configuration scripts<RoCE-configuration-script-for-Broadcom-Thor-NIC>` for more details.
+      sudo mst status
+
+      sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s ADVANCED_PCI_SETTINGS=1
+
+      sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s MAX_ACC_OUT_READ=44
+
+      sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s PCI_WR_ORDERING=1
+
+      reboot
+
+* For Broadcom NICs, ensure RoCE is enabled and consider disabling any unused
+  ports. See the :ref:`Broadcom RoCE configuration scripts<RoCE-configuration-script-for-Broadcom-Thor-NIC>`
+  for more details.
 
 * Ensure Relaxed Ordering is enabled in the PCIe settings for your system BIOS as well.
 
-.. Note::
-    All instructions for RoCE networks in this guide and additional guides are based on the v2 protocol.
+.. note::
+
+   All instructions for RoCE networks in this guide and additional guides are
+   based on the v2 protocol.
 
 Check NIC link speed
 --------------------
@@ -222,41 +291,50 @@ Verify the NICs in your servers are reporting the correct speeds. Several comman
    - ``ibdiagnet`` provides an output of the entire fabric in the default log files. You can verify link speeds here.
    - ``ibstat`` or ``ibstatus`` tells you if the link is up and the speed at which it is running for all HCAs in the server.
 
-Verify Mellanox OFED and Firmware Installation
+Verify Mellanox OFED and firmware installation
 ----------------------------------------------
 
-.. Note::
-    This step is only necessary for InfiniBand networks.
+.. note::
 
-Download the latest version of `Mellanox OFED (MLNX_OFED) <https://docs.nvidia.com/networking/display/mlnxofedv461000/downloading+mellanox+ofed>`_ from Nvidia. Run the installer and flint tools to verify the latest version of MLNX_OFED and firmware is on the HCAs.
+   This step is only necessary for InfiniBand networks.
 
-Set up a GPU Testing Environment
+Download the latest version of
+`Mellanox OFED (MLNX_OFED) <https://docs.nvidia.com/networking/display/mlnxofedv461000/downloading+mellanox+ofed>`_
+from NVIDIA. Run the installer and flint tools to verify the latest version of
+MLNX_OFED and firmware is on the HCAs.
+
+Set up a GPU testing environment
 ================================
 
-Next, create a testing environment to gather performance data for your GPUs. This requires installation of ROCm Validation Suite (RVS), TransferBench, and ROCm Bandwidth Test (RBT).
+Next, create a testing environment to gather performance data for your GPUs.
+This requires installation of ROCm Validation Suite (RVS), TransferBench, and
+ROCm Bandwidth Test.
 
 #. Connect to the CLI of your GPU node.
 
-#. Follow directions to install RVS at `Installing ROCm Validation Suite <https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/latest/install/installation.html>`_
+#. Install ROCm Validation Suite following the directions at
+   :doc:`ROCmValidationSuite:install/installation`
 
    * Once installed, RVS is located in ``/opt/rocm/``.
 
-#. Install TransferBench from CLI.
+#. Install TransferBench. Refer to :doc:`transferbench:install/install` for
+   details.
 
-      .. code-block:: shell
+   .. code-block:: shell
 
-         $ git clone https://github.com/ROCmSoftwarePlatform/TransferBench.git
-         
-         $ cd TransferBench
-         
-         $ sudo make
+      $ git clone https://github.com/ROCm/TransferBench.git
 
-         # Running make without sudo seems to cause runtime issues
-         # If this doesn't work, install math libraries manually using https://github.com/RadeonOpenCompute/ROCm/issues/1843
+      $ cd TransferBench
 
-         $ sudo apt install libstdc++-12-dev
+      $ sudo make
 
-#. Install ROCm Bandwidth Test from CLI.
+      # Running make without sudo seems to cause runtime issues
+      # If this doesn't work, install math libraries manually using https://github.com/ROCm/ROCm/issues/1843
+
+      $ sudo apt install libstdc++-12-dev
+
+#. Install ROCm Bandwidth Test. Refer to :doc:`rocm_bandwidth_test:install/install`
+   for details.
 
    .. code-block:: shell
       
@@ -268,27 +346,44 @@ Run ROCm Validation Suite (RVS)
 RVS contains many different tests, otherwise referred to as modules. The relevant tests for this guide are as follows:
 
 * `P2P Benchmark and Qualification Tool <https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/latest/conceptual/rvs-modules.html#p2p-benchmark-and-qualification-tool-pbqt-module>`_ (PBQT)
+
 * `ROCm Configuration Qualification Tool <https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/latest/conceptual/rvs-modules.html#rocm-configuration-qualification-tool-rcqt-module>`_ (RCQT)
+
 * `PCI Express Bandwidth Benchmark <https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/latest/conceptual/rvs-modules.html#pci-express-bandwidth-benchmark-pebb-module>`_ (PEBB)
+
 * `GPU Properties <https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/latest/conceptual/rvs-modules.html#gpu-properties-gpup>`_ (GPUP)
+
 * `GPU Stress test <https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/latest/conceptual/rvs-modules.html#gpu-stress-test-gst-module>`_ (GST)
 
-You can run multiple tests at once with ``sudo /opt/rocm/rvs/rvs -d 3``, which runs all tests set in ``/opt/rocm/share/rocm-validation-suite/rvs.conf`` at verbosity level 3. The default tests are GPUP, PEQT, PEBB, and PBQT, but you can modify the config file to add your preferred tests. The `RVS documentation <https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/latest/how%20to/configure-rvs.html>`_ has more information on how to modify ``rvs.conf`` and helpful command line options.  
+You can run multiple tests at once with ``sudo /opt/rocm/rvs/rvs -d 3``, which
+runs all tests set in ``/opt/rocm/share/rocm-validation-suite/rvs.conf`` at
+verbosity level 3. The default tests are GPUP, PEQT, PEBB, and PBQT, but you can
+modify the config file to add your preferred tests. The
+:doc:`RVS documentation <rocmvalidationsuite:how%20to/configure-rvs>` has more
+information on how to modify ``rvs.conf`` and helpful command line options.  
 
-When you identify a problem, use ``rvs -g`` to understand what the GPU ID is referring to. 
+.. tip::
 
-.. Note::
-   GPU numbering in RVS does not have the same order as in ``rocm-smi``. To map the GPU order listed in ``rvs-g`` to the rocm output, run ``rocm-smi --showbus`` and match each GPU by bus ID. 
+   When you identify a problem, use ``rvs -g`` to understand what the GPU ID is
+   referring to. 
 
-You can run a specific RVS test by calling its configuration file with ``sudo /opt/rocm/bin/rvs -c /opt/rocm/share/rocm-validation-suite/conf/<test name>.conf``. The following shell examples demonstrate what the commands and outputs look like for some of these tests. 
+   GPU numbering in RVS does not have the same order as in ``rocm-smi``. To map
+   the GPU order listed in ``rvs-g`` to the rocm output, run
+   ``rocm-smi --showbus`` and match each GPU by bus ID. 
 
-**Example of GPU stress tests with the GST module**
+You can run a specific RVS test by calling its configuration file with
+``sudo /opt/rocm/bin/rvs -c /opt/rocm/share/rocm-validation-suite/conf/<test name>.conf``.
+The following shell examples demonstrate what the commands and outputs look like
+for some of these tests. 
+
+Example of GPU stress tests with the GST module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. tab-set::
 
-   .. tab-item:: Shell Output                       
-         
-      .. code-block:: shell
+   .. tab-item:: Shell output
+
+      .. code-block:: shell-session
 
          $ sudo /opt/rocm/bin/rvs -c /opt/rocm/share/rocm-validation-suite/conf/gst_single.conf
 
@@ -310,13 +405,14 @@ You can run a specific RVS test by calling its configuration file with ``sudo /o
 
          sudo /opt/rocm/bin/rvs -c /opt/rocm/share/rocm-validation-suite/conf/gst_single.conf                
 
-**Example of PCIe bandwidth benchmarks with the PBQT module**
+Example of PCIe bandwidth benchmarks with the PBQT module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. tab-set::
 
-   .. tab-item:: Shell Output                       
-         
-      .. code-block:: shell
+   .. tab-item:: Shell output
+
+      .. code-block:: shell-session
 
          $ sudo /opt/rocm/rvs/rvs -c /opt/rocm/share/rocm-validation-suite/conf/pbqt_single.conf -d 3
 
@@ -361,15 +457,29 @@ You can run a specific RVS test by calling its configuration file with ``sudo /o
 Run TransferBench
 -----------------
 
-TransferBench is a tool you can use to benchmark simultaneous transfers between CPU and GPU devices. To use, navigate to the TransferBench installation folder (the folder created when you ran ``git clone https://github.com/ROCmSoftwarePlatform/TransferBench.git`` in previous directions). Run the ``./TransferBench`` command to get a list of common commands, flags, and an overview of your CPU/GPU topology as detected by TransferBench.
+TransferBench is a benchmarking tool designed to measure simultaneous data
+transfers between CPU and GPU devices. To use it, first navigate to the
+TransferBench installation directory. Then, execute the following command to
+display available commands, flags, and an overview of your system's CPU/GPU
+topology as detected by TransferBench:
 
-Like RVS, TransferBench runs tests from configuration files. You can either run one of several preset configuration files or define your own. A useful all-around test to run is ``p2p``, which tests the unidirectional and bidirectional transfer rates on all CPUs and GPUs detected by TransferBench. See the example below for the output of this test on a 2-CPU, 8-GPU node with 4 MB transfer packets.
+.. code-block:: shell
+
+   ./TransferBench
+
+Like RVS, TransferBench operates based on configuration files. You can either
+choose from several preset configuration files or create a custom configuration
+to suit your testing needs. A commonly recommended test is the ``p2p``
+(peer-to-peer) test, which measures unidirectional and bidirectional transfer
+rates across all CPUs and GPUs detected by the tool. The following example shows
+the output of a ``p2p`` test on a system with 2 CPUs and 8 GPUs, using 4 MB
+transfer packets.
 
 .. tab-set::
 
-   .. tab-item:: Shell Output                       
-         
-      .. code-block:: shell
+   .. tab-item:: Shell output
+
+      .. code-block:: shell-session
 
          $ ./TransferBench p2p 4M
 
@@ -446,19 +556,28 @@ Like RVS, TransferBench runs tests from configuration files. You can either run 
 
          ./TransferBench p2p 4M
 
-If you want to define your own configuration file, run ``cat ~/TransferBench/examples/example.cfg`` to view an example configuration file with information on commands and arguments to run more granular testing. Running DMA tests between single pairs of devices is one helpful and common use-case for custom configuration files. See the `TransferBench documentation <https://rocm.docs.amd.com/projects/TransferBench/en/latest/index.html>`_ for more information.
+If you want to define your own configuration file, run
+``cat ~/TransferBench/examples/example.cfg`` to view an example configuration
+file with information on commands and arguments to run more granular testing.
+Running DMA tests between single pairs of devices is one helpful and common
+use case for custom configuration files. See the
+`TransferBench documentation <transferbench:index>` for more information.
 
 Run ROCm Bandwidth Test (RBT)
 -----------------------------
 
-ROCm Bandwidth Test lets you identify performance characteristics for host-to-device (H2D), device-to-host (D2H), and device-to-device (D2D) buffer copies on a ROCm platform. This assists when looking for abnormalities and tuning performance.
+ROCm Bandwidth Test lets you identify performance characteristics for
+host-to-device (H2D), device-to-host (D2H), and device-to-device (D2D) buffer
+copies on a ROCm platform. This assists when looking for abnormalities and
+tuning performance.
 
-Run ``/opt/rocm/bin/rocm-bandwidth-test -h`` to get a help screen with available commands.
+Run ``/opt/rocm/bin/rocm-bandwidth-test -h`` to get a help screen with available
+commands.
 
-.. code-block:: shell
+.. code-block:: shell-session
 
    $ /opt/rocm/bin/rocm-bandwidth-test -h
-      
+
    Supported arguments:
 
             -h    Prints the help screen
@@ -482,16 +601,18 @@ Run ``/opt/rocm/bin/rocm-bandwidth-test -h`` to get a help screen with available
                   Case 3: rocm_bandwidth_test -A with {clmv}{1,}
                   Case 4: rocm_bandwidth_test -s x -d y with {lmv}{2,}
 
-
-The default behavior of ``/opt/rocm/bin/rocm-bandwidth-test`` without any flags runs unilateral and bilateral benchmarks (flags -a and -A) on all available combinations of device. Review the following for examples of common commands and output.
+The default behavior of ``/opt/rocm/bin/rocm-bandwidth-test`` without any flags
+runs unilateral and bilateral benchmarks (flags ``-a`` and ``-A``) on all
+available combinations of device. Review the following for examples of common
+commands and output.
 
 Getting a list of all ROCm-detected devices:
 
 .. tab-set::
 
-   .. tab-item:: Shell Output
+   .. tab-item:: Shell output
 
-      .. code-block:: shell
+      .. code-block:: shell-session
 
          $ /opt/rocm/bin/rocm-bandwidth-test -e
 
@@ -584,7 +705,7 @@ Running a unidirectional benchmark between devices 0 (CPU) and 4 (GPU):
 
 .. tab-set::
 
-   .. tab-item:: Shell Output
+   .. tab-item:: Shell output
 
       .. code-block:: shell
 
@@ -631,7 +752,7 @@ Running a bidirectional benchmark on all available device combinations:
 
 .. tab-set::
 
-   .. tab-item:: Shell Output
+   .. tab-item:: Shell output
 
       .. code-block:: shell
 
@@ -668,7 +789,9 @@ Running a bidirectional benchmark on all available device combinations:
 
          /opt/rocm/bin/rocm-bandwidth-test -A
 
-For a more detailed explanation of different ways to run RBT, see the `ROCm Bandwidth Test User Guide <https://github.com/ROCm/rocm_bandwidth_test/blob/master/ROCmBandwithTest_UserGuide.pdf>`_.
+For a more detailed explanation of different ways to run ROCm Bandwidth Test,
+see the
+`ROCm Bandwidth Test user guide <https://github.com/ROCm/rocm_bandwidth_test/blob/master/ROCmBandwithTest_UserGuide.pdf>`_.
 
 Configuration scripts
 =====================
@@ -736,15 +859,15 @@ Run these scripts where indicated to aid in the configuration and setup of your 
       for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i getoption -name pcie_relaxed_ordering); done
 
       # Set Relaxed Ordering if not enabled 
-      
+
       for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i setoption -name pcie_relaxed_ordering -value 1); done
 
       # Check if RDMA support is enabled
-      
+
       for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i getoption -name support_rdma -scope 0) - $(sudo niccli -dev=$i \ getoption=support_rdma:1); done
 
       # Set RMDA support if not enabled 
-      
+
       for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo \ niccli -dev=$i setoption -name support_rdma -scope 0 -value 1) - $(sudo niccli -dev=$i \ setoption -name support_rdma -scope 1 -value 1); done
 
       # Set Speed Mask
@@ -752,32 +875,10 @@ Run these scripts where indicated to aid in the configuration and setup of your 
       niccli -dev=<interface name> setoption=autodetect_speed_exclude_mask:0#01C0
 
       # Set 200Gbps
-      
+
       ethtool -s <interface name> autoneg off speed 200000 duplex full
 
       # Set performance profile to RoCE ==REQUIRES REBOOT IF OLDER FIRMWARE LOADED==
 
       for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo \ niccli -dev=$i setoption -name performance_profile -value 1); done
 
-Reference Documentation
-=======================
-
-* `ROCm Documentation <https://rocm.docs.amd.com/en/latest/>`_
-
-* `ROCm installation for Linux <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/index.html>`_
-
-* `Nvidia MLNX_OFED Documentation <https://docs.nvidia.com/networking/display/mlnxofedv461000>`_
-
-* `ROCm Validation Suite Documentation <https://rocm.docs.amd.com/projects/ROCmValidationSuite/en/latest/index.html>`_
-
-* `TransferBench Documentation <https://rocm.docs.amd.com/projects/TransferBench/en/latest/index.html>`_
-
-* `ROCm Bandwidth Test User Guide <https://github.com/ROCm/rocm_bandwidth_test/blob/master/ROCmBandwithTest_UserGuide.pdf>`_
-
-* `Broadcom Ethernet Network Adapter User Guide <https://techdocs.broadcom.com/us/en/storage-and-ethernet-connectivity/ethernet-nic-controllers/bcm957xxx/adapters.html>`_
-
-Resources and Helpful Links
-===========================
-
-* `AMD Infinity Hub <https://www.amd.com/en/developer/resources/infinity-hub.html>`_ 
-* `AMD ROCm Developer Hub <https://www.amd.com/en/developer/resources/rocm-hub.html>`_
