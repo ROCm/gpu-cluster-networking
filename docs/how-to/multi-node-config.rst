@@ -7,7 +7,7 @@ Multi-node network configuration for AMD Instinct accelerators
 **************************************************************
 
 After single node configuration testing has been completed and verified, validate network connections in node pairs. All the tests described in this topic must be run between two nodes in a client-server relationship. Both nodes
-must be configured and verified per the :doc:`./single-node-config`
+must be configured and verified according to :doc:`./single-node-config`
 before running any node-to-node performance tests.
 
 .. _Multinode-Prerequisites:
@@ -20,7 +20,7 @@ Before following the steps in this guide, complete the following prerequisites.
 * Install all required software for MPI in the
   :doc:`ROCm documentation <rocm:how-to/gpu-enabled-mpi>`.
 
-  * Specifically, follow the installation instructions for OpenMPI, OSU
+  * Specifically, follow the installation instructions for Open MPI, OSU
     benchmarks, and collective operations.
 
 * Install `Slurm Workload Manager <https://slurm.schedmd.com/quickstart_admin.html>`_
@@ -71,7 +71,7 @@ OFED perftest installation and benchmarking
 
 Install and run the `OFED performance tests <https://github.com/linux-rdma/perftest>`_
 for host to host (H2H) testing. Loopback is implemented in the tests to remove
-the switch from benchmark results. Remember to install OFED Perfests on both
+the switch from benchmark results. Remember to install OFED perftests on both
 nodes you plan to use in this section. Commands may require ``sudo`` depending
 on user privileges.
 
@@ -351,7 +351,7 @@ only add the ``--use_rocm`` flag on either the server or client side so that one
 node communicates with the GPUs while the other does so with CPUs. Then, run the
 test a second time with the ``use_rocm`` flag on the other side. Continue to use
 the most adjacent NIC to the GPU or CPU being tested so that communication
-doesn't run between intranode CPUs (testing the internal CPU-CPU fabric
+doesn't run between intra-node CPUs (testing the internal CPU-CPU fabric
 isn't a goal now). 
 
 D2D RDMA multithread benchmark
@@ -410,7 +410,7 @@ script provided in the drop-down (the script also includes an option to install
 MPICH if needed). Otherwise, you can follow the steps to manually install at
 `<https://github.com/ROCm/rccl-tests>`__.
 
-.. dropdown:: build-and-run_rccl-tests_sweep_multinode.sh
+.. dropdown:: `build-and-run_rccl-tests_sweep_multinode.sh`
 
     .. code-block:: shell
       :linenos:

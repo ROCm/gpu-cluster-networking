@@ -81,8 +81,7 @@ where it may not be obvious.
 .. tip::
 
    Gather all the PCIe addresses for your GPUs, NICs, and switches in advance
-   and document them so that you don't need to do it while following these
-   steps.
+   and take note of them so you have them on hand for next steps.
 
 Check PCIe device speed and width
 ---------------------------------
@@ -253,19 +252,19 @@ based on the type of NIC you're deploying (InfiniBand or RoCE).
 
 * For Mellanox NICs (InfiniBand or RoCE): Disable ATS, enable PCI Relaxed Ordering, increase max read requests, enable advanced PCI settings. 
 
-   .. code-block:: shell
+  .. code-block:: shell
 
-      sudo mst start
+     sudo mst start
 
-      sudo mst status
+     sudo mst status
 
-      sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s ADVANCED_PCI_SETTINGS=1
+     sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s ADVANCED_PCI_SETTINGS=1
 
-      sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s MAX_ACC_OUT_READ=44
+     sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s MAX_ACC_OUT_READ=44
 
-      sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s PCI_WR_ORDERING=1
+     sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s PCI_WR_ORDERING=1
 
-      reboot
+     reboot
 
 * For Broadcom NICs, ensure RoCE is enabled and consider disabling any unused
   ports. See the :ref:`Broadcom RoCE configuration scripts<RoCE-configuration-script-for-Broadcom-Thor-NIC>`
