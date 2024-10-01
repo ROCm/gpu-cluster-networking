@@ -5,7 +5,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # configurations for PDF output by Read the Docs
-project = "GPU Cluster Networking Documentation"
+project = "GPU cluster networking documentation"
 author = "Advanced Micro Devices, Inc."
 copyright = "Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved."
 version = "0.1.0"
