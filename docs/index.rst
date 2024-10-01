@@ -16,7 +16,7 @@ multi-node environments using the appropriate benchmarking tools.
 Refer to the relevant networking guides for step-by-step instructions on
 validating network configurations in single-node and multi-node environments.
 These guides cover system settings, device configurations, networking tools, and
-performance tests to ensure AMD Instinct™-powered GPU-enabled clusters achieve
+performance tests to ensure AMD Instinct™-powered GPU clusters achieve
 optimal speed and bandwidth during operation.
 
 .. grid:: 2
