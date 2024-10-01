@@ -312,7 +312,7 @@ ROCm Bandwidth Test.
 #. Connect to the CLI of your GPU node.
 
 #. Install ROCm Validation Suite following the directions at
-   :doc:`ROCmValidationSuite:install/installation`
+   :doc:`rocmvalidationsuite:install/installation`.
 
    * Once installed, RVS is located in ``/opt/rocm/``.
 
@@ -560,7 +560,7 @@ If you want to define your own configuration file, run
 file with information on commands and arguments to run more granular testing.
 Running DMA tests between single pairs of devices is one helpful and common
 use case for custom configuration files. See the
-`TransferBench documentation <transferbench:index>` for more information.
+:doc:`TransferBench documentation <transferbench:index>` for more information.
 
 Run ROCm Bandwidth Test (RBT)
 -----------------------------

@@ -75,7 +75,7 @@ the switch from benchmark results. Remember to install OFED perftests on both
 nodes you plan to use in this section. Commands may require ``sudo`` depending
 on user privileges.
 
-#. From the CLI of your host, clone the 
+#. From the CLI of your host, clone the perftest repo.
 
    .. code-block:: shell
 
@@ -410,7 +410,7 @@ script provided in the drop-down (the script also includes an option to install
 MPICH if needed). Otherwise, you can follow the steps to manually install at
 `<https://github.com/ROCm/rccl-tests>`__.
 
-.. dropdown:: `build-and-run_rccl-tests_sweep_multinode.sh`
+.. dropdown:: ``build-and-run_rccl-tests_sweep_multinode.sh``
 
     .. code-block:: shell
       :linenos:
