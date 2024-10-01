@@ -33,16 +33,8 @@ optimal speed and bandwidth during operation.
 
 .. note::
 
-   AMD Instinct systems come in many shapes and sizes, and cluster design adds
-   yet another dimension of configuration to consider. These instructions are
-   written at a sufficiently high level to ensure they can be followed for as
-   many environments as possible. While some scenarios do provide specific
-   examples of hardware, know that your configuration is likely to differ from
-   what is being demonstrated in terms of GPUs and CPUs per server, firmware
-   versions, and network interconnect fabric.
-
-   AMD Instinct systems vary in form and configuration, with cluster design
-   introducing additional layers of complexity. The guidance in this
+   AMD Instinct systems vary in form and configuration, and cluster design
+   adds additional layers of complexity. The guidelines in this
    documentation are written at a high level for broad applicability across
    diverse environments. While certain scenarios may include specific hardware
    examples, your setup will likely differ in terms of GPUs and CPUs per server,
