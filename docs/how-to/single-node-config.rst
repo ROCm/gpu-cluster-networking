@@ -791,7 +791,7 @@ Running a bidirectional benchmark on all available device combinations:
 
 For a more detailed explanation of different ways to run ROCm Bandwidth Test,
 see the
-:doc:`user guide <https://github.com/ROCm/rocm_bandwidth_test/blob/master/ROCmBandwithTest_UserGuide.pdf>`_.
+`ROCm Bandwidth Test user guide <https://github.com/ROCm/rocm_bandwidth_test/blob/master/ROCmBandwithTest_UserGuide.pdf>`_.
 
 Configuration scripts
 =====================
