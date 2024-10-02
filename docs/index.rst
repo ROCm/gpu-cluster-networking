@@ -34,7 +34,7 @@ optimal speed and bandwidth during operation.
 .. note::
 
    AMD Instinct systems vary in form and configuration, and cluster design
-   adds additional layers of complexity. The guidance in this
+   adds additional layers of complexity. The guidelines in this
    documentation are written at a high level for broad applicability across
    diverse environments. While certain scenarios may include specific hardware
    examples, your setup will likely differ in terms of GPUs and CPUs per server,
