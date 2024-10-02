@@ -114,11 +114,6 @@ Once installed, there are six main modules available with OFED perftests:
 
 * ``ib_send_lat`` - Test latency with send transactions.
 
-The examples in this section use ``ib_send_bw``, but you can accomplish similar
-with any other test you require. The goal of the tests in this section is to
-verify high speed Host to Host (H2H) data transfer rates between nodes before
-including GPU traffic, therefore the ``use_rocm`` flag is avoided in all commands.
-
 The examples in this section use the ``ib_send_bw`` tool, but you can achieve
 similar results with other benchmarking tools, depending on your requirements.
 The primary objective of these tests is to verify high-speed Host-to-Host (H2H)
