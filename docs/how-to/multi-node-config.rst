@@ -75,7 +75,7 @@ the switch from benchmark results. Remember to install OFED perftests on both
 nodes you plan to use in this section. Commands may require ``sudo`` depending
 on user privileges.
 
-#. From the CLI of your host, clone the perftest repo.
+#. From the CLI of your host, clone the perftest repository.
 
    .. code-block:: shell
 
@@ -113,11 +113,6 @@ Once installed, there are six main modules available with OFED perftests:
 * ``ib_send_bw`` - Test bandwidth with send transactions.
 
 * ``ib_send_lat`` - Test latency with send transactions.
-
-The examples in this section use ``ib_send_bw``, but you can accomplish similar
-with any other test you require. The goal of the tests in this section is to
-verify high speed Host to Host (H2H) data transfer rates between nodes before
-including GPU traffic, therefore the ``use_rocm`` flag is avoided in all commands.
 
 The examples in this section use the ``ib_send_bw`` tool, but you can achieve
 similar results with other benchmarking tools, depending on your requirements.
