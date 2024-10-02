@@ -75,7 +75,7 @@ the switch from benchmark results. Remember to install OFED perftests on both
 nodes you plan to use in this section. Commands may require ``sudo`` depending
 on user privileges.
 
-#. From the CLI of your host, clone the perftest repo.
+#. From the CLI of your host, clone the perftest repository.
 
    .. code-block:: shell
 
