@@ -499,25 +499,241 @@ MPICH if needed). Otherwise, you can follow the steps to manually install at
           sleep 10
       done
 
+Run RCCL benchmarks
+===================
+
+ROCm Communications Collectives Library (RCCL) is a set of collective operations that perform multi-GPU and multi-node communication over a network. These operations are ``AllReduce``, ``AllGather``, ``AlltoAll``, ``Broadcast``, ``ReduceScatter``, ``Reduce``, ``Scatter``, and ``Gather``, implemented as ring or tree algorithms. The **collective** descriptor for these operations means they can support multiple devices (GPUs) in a single run. As RCCL is specifically optimized for AMD GPUs, it's the standard by which performance can be tested and measured on cluster deployments.
+
+Communication between GPUs is handled over PCIe and XGMI interconnects within an individual node, while communication from node to node can run on RoCE, InfiniBand, or TCP/IP cluster networks.  
+
+Although a version of RCCL is included with all ROCm installations, it is a standalone library that can be installed apart from ROCm as well.
+
+.. note::
+   The paths for the MPI and RCCL commands in this section presume both are installed in the ``/opt`` directory. Installation paths for your environment may be different and should be updated accordingly.  
+
+Using MPI to run RCCL
+---------------------
+
+You can use ``mpirun`` to initiate a RCCL operation from the command line. The command structure is described as follows:
+
+``/path/to/mpirun <MPI parameters> /path/to/rccl-operation <RCCL parameters>``
+
+To apply this model to an ``AllReduce`` run on a single node with 8 GPUs:
+
+.. code-block:: shell
+  
+  /opt/ompi/bin/mpirun -np 8 --bind-to numa /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1
+This command runs 8 MPI processes (``np -8``), binding each process to a unique GPU (``--bind-to numa``, ``-g 1``) and scanning from 8 bytes to 16 gigabytes (``-b 8 -e 16G``).
+
+Further examples in this guide continue to use ``AllReduce``, but you can run any of the other operations by editing the path to point at your desired RCCL test.
+
+Multi-node RCCL operations
+--------------------------
+
+.. note::
+  To successfully run multi-node RCCL, all nodes you plan to test must be configured with passwordless SSH and finger-printed, otherwise the runs fail.
+
+To run a RCCL test between two nodes, adjust the previous command as follows:
+
+.. code-block:: shell
+  /opt/ompi/bin/mpirun -host <node01>:8,<node02>:8 -np 16 -x NCCL_IB_HCA=<nic01>,<nic02>,<nic03>,<nic04>,<nic05>,<nic06>,<nic07>,<nic08> /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1
+
+The ``host`` parameter defines nodes to include in the run, where ``<node01>`` and ``<node02>`` are the respective IP or DNS addresses for those nodes, and ``:8`` represents the number of mpi processes (defined by ``np``) allocated to each node. The value for ``np`` is equal to the total number of GPUs included in the RCCL run across all nodes, which should also be equal to the total number of allocated processes per node (assuming each node has 8 GPUs). NICs included in the run are defined in ``NCCL_IB_HCA``, where ``<nic01>,<nic02>..`` are the RDMA names for each NIC (``bnxt_re0, bnxt_re1..`` for Broadcom devices and ``mlx5_0,mlx5_2,..`` for Mellanox).
+
+You can scale this command to more nodes by incrementing the values for ``host`` and ``np`` accordingly.
+
+**4-node RCCL test**
+
+.. code-block:: shell
+  
+  /opt/ompi/bin/mpirun -host <node01>:8,<node02>:8,<node03>:8,<node04>:8 -np 32 -x NCCL_IB_HCA=<nic01>,<nic02>,<nic03>,<nic04>,<nic05>,<nic06>,<nic07>,<nic08> /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1
+
+**8-node RCCL test**
+
+.. code-block:: shell
+
+  /opt/ompi/bin/mpirun -host <node01>:8,<node02>:8,<node03>:8,<node04>:8,<node05>:8,<node06>:8,<node07>:8,<node08>:8 -np 64 -x NCCL_IB_HCA=<nic01>,<nic02>,<nic03>,<nic04>,<nic05>,<nic06>,<nic07>,<nic08> /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1
+
+**16-node RCCL test**
+
+.. code-block:: shell
+
+  /opt/ompi/bin/mpirun -host <node01>:8,<node02>:8,<node03>:8,<node04>:8,<node05>:8,<node06>:8,<node07>:8,<node08>:8,<node09>:8,<node10>:8,<node11>:8,<node12>:8,<node13>:8,<node14>:8,<node15>:8,<node16>:8 -np 128 -x NCCL_IB_HCA=<nic01>,<nic02>,<nic03>,<nic04>,<nic05>,<nic06>,<nic07>,<nic08> /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1
+
+Additional command parameters
+-----------------------------
+
+To optimize RCCL performance across nodes, most systems require additional ``mpirun`` parameters in tandem with system-specific tuning. This section provides a description of parameters that may be helpful for improving performance depending on the design features of your cluster (network topology, NICs, OS, and so on). These parameters can be provided at the command line or used in a pre-designed RCCL configuration file.
+
+oob_tcp_if_exclude
+^^^^^^^^^^^^^^^^^^
+
+MCA parameter that instructs OpenMPI to exclude a network interface when searching for out-of-band (OOB) TCP communications during the initation of ``mpirun``. Include this parameter if your system has interfaces that shouldn't be involved in RCCL operations. Multiple interfaces may be included as comma-separated values.
+
+**Example**
+
+.. code-block:: shell
+
+  -mca oob_btl_if_exclude=<interface1>,<interface2>
+
+oob_btl_if_exclude
+^^^^^^^^^^^^^^^^^^
+
+Provides the same function as ``oob_tcp_if_exclude``, but for BTL OOB communications. If excluding any interfaces, use both parameters.
+
+**Example**
+
+.. code-block:: shell
+
+  -mca oob_btl_if_exclude=<interface1>,<interface2>
+
+NCCL_NET_GDR_LEVEL
+^^^^^^^^^^^^^^^^^^
+
+Used to define the maximum level of distance between a GPU and NIC at which GPU Direct RDMA/PeerDirect should be used. The GDR value is detected automatically based on PCI device topology, so setting this manually isn't typically necessary but may be useful when debugging low performance.There are several accepted string values:
+
+* ``LOC`` - Never use RDMA (always disabled).
+* ``PIX`` - Use RDMA when GPU and NIC are connected to the same PCI switch.
+* ``PXB`` - Use RDMA when GPU and NIC are connected through different PCI switches (potentially multiple hops).
+* ``PHB`` - Use RDMA when GPU and NIC are on the same NUMA node. Traffic will go through the CPU.
+* ``SYS`` - Use RDMA even across the SMP interconnect between NUMA nodes (e.g., QPI/UPI) (always enabled).
+
+For most configurations, ``PHB`` is the recommended value.
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_NET_GDR_LEVEL=PHB
+
+NCCL_DEBUG
+^^^^^^^^^^
+
+Including this parameter displays various levels of information for debugging. Useful values include ``VERSION`` to display the RCCL version, linked ROCm version, and the RCCL git tag, while ``INFO`` displays information for all supported subsystems (see NCCL_DEBUG_SUBSYS).
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_DEBUG=VERSION
+
+NCCL_DEBUG_SUBSYS
+^^^^^^^^^^^^^^^^^
+
+Used in conjunction with ``NCCL_DEBUG=INFO`` to filter information based on subsystem. Value is a comma separated list of subsystems to include in debugging.
+
+Accepted values are INIT (initialization, default value), COLL (collectives), P2P (peer-to-peer), SHM (shared memory), NET (network), GRAPH (topology detection and graph search), TUNING (algorith/protocol tuning), ENV (environment settings), ALLOC (memory allocations), and ALL (includes all subsystems).
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=INIT,GRAPH,NET,COLL
+
+NCCL_ALGO
+^^^^^^^^^
+
+Sets the algorithm for a collective operation. Value may be either ``Ring`` or ``Tree``. A default value is set at each message size and differs between collectives (that is, a collective may use a tree algorithm at smaller message sizes and transition to a ring algorithm as the message size becomes larger). Defining ``NCCL_ALGO`` as a paremeter forces the selected algorithm for all message sizes.
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_ALGO=Ring
+
+NCCL_TOPO_FILE
+^^^^^^^^^^^^^^
+
+Loads a pre-existing topology XML file derived from a system with AMD GPUs before detecting node topology. Value is the path to the XML file.
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_TOPO_FILE=/path/to/topology-file.xml
+
+.. note::
+  If you are working in a virtual environment, the topology file **must** declare ``<system version="2">`` at the start of the file, or the RCCL test will fail. This is because RCCL defines its own ``NCCL_TOPO_XML_VERSION`` to accommodate additional fields present in RCCL topology files.
+
+NCCL_TOPO_DUMP_FILE
+^^^^^^^^^^^^^^^^^^^
+
+Creates a post-detection topology XML file in a user-defined location. Value is the path to where the file will be created or overwritten.
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_TOPO_DUMP_FILE=/path/to/topology-file.xml
+
+NCCL_IB_GID_INDEX
+^^^^^^^^^^^^^^^^^
+
+Sets the Global ID index (GID) for a RoCE device. In most cases for RoCEv2, the value should be set to ``3``, but you can verify this with the ``show_gids`` script on a Mellanox NIC and ``ibv_devinfo -vvv`` on a Broadcom NIC. Unnecessary for InfiniBand networks.
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_IB_GID_INDEX=3
+
+NCCL_IB_QPS_PER_CONNECTION
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Defines the amount of queue pairs (QPs) to use per InfiniBand/RoCE connection. Default value is 1. Increasing the value can have performance impact as more connections require more memory.
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_IB_QPS_PER_CONNECTION=4
+
+NCCL_IB_PCI_RELAXED_ORDERING
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Determines the usage of relaxed ordering. 2 is the default value and uses relaxed ordering when available while setting a value of 1 forces relaxed ordering, and 0 disables it. 
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_IB_PCI_RELAXED_ORDERING=1
+
+NCCL_SOCKET_IFNAME
+^^^^^^^^^^^^^^^^^^
+
+Explicitly defines the network interface for RCCL to use when initiating communications. This is useful to define when multiple interfaces present to ensure RCCL is using the intended interface. Multiple interfaces may be provided as comma separated values.
+
+**Example**
+
+.. code-block:: shell
+
+  NCCL_SOCKET_IFNAME=<interface>
+
+RCCL_ENABLE_INTRANET
+^^^^^^^^^^^^^^^^^^^^
+
+Enables use of local intranet during single-node RCCL testing. Use this if you want to include the NICs and leaf switch while testing on single-node. Can deliver performance improvements as the CPU is assisted by the switch. To activate, set value to ``1`` (Default value is ``0``, or deactivated).
+
+**Example**
+
+.. code-block:: shell
+
+  RCCL_ENABLE_INTRANET=1
+
 Run OSU Micro Benchmarks
 =========================
 
-Running the OSU Micro Benchmarks (OMB) with MPI simulates conditions similar to an AI/HPC workload over your cluster network. Successful MPI runs require that passwordless SSH be configured between all server pairs where OMB is installed and that they also be finger-printed, otherwise the runs fail. 
+Running the OSU Micro Benchmarks (OMB) with MPI simulates conditions similar to an AI/HPC workload over your cluster network and serves as a good back-up or secondary test to run and compare with RCCL results. As with RCCL, passwordless SSH and fingerpinting is required between all server pairs that will be tested. 
 
-This section covers the the two types of OMB: 
-
-* Point to point (pt2pt) benchmarks test communication between one discrete component on a server (host or device) to another.
-* Collectives benchmarks support the use of multiple devices in a single run. 
+OMB supports both point to point (pt2pt) operations between one discrete component on a server (host or device) to another, and the same collective operations already seen in the RCCL section.
 
 In a typical use case, you start with a pair of nodes and run the pt2pt benchmarks then move on to collectives. 
 
-Point to point (pt2pt) OSU benchmarks
--------------------------------------
-
 Commands in the table below must run on two nodes with RoCE or InfiniBand interconnect from Host to Host (CPU to CPU). You can invoke the command from either node, but directories must mirror one another or the tests will hang.
 
-.. note::
-   The paths for the MPI and OMB commands presume both are installed in the ``/opt`` directory. Installation paths for your environment may be different and should be updated accordingly.  
+.. note:: 
+  The paths for the MPI and OMB commands in this section presume both are installed in the ``/opt`` directory. Installation paths for your environment may be different and should be updated accordingly.  
 
 .. raw:: html
 
@@ -559,7 +775,6 @@ Collective OSU benchmarks
 -------------------------
 
 .. raw:: html
-
    <style>
      #coll-commands-table tr td:last-child {
        font-size: 0.9rem;
@@ -588,24 +803,9 @@ Collective OSU benchmarks
 
       * - osu_alltoall 2N 16Proc
         - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D``
-
+        
       * - osu_allgather
         - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
 
       * - osu_allgather 2N 16Proc
         - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
-
-Run RCCL collective benchmark
-=============================
-
-RCCL is a collective communication library optimized for collective operations
-by multi-GPU and multi-node communication primitives that are in turn optimized
-for AMD Instinct accelerators. The RCCL Test is typically launched using MPI,
-but you can use MPICH or Open MPI as well. 
-
-.. list-table::
-   :stub-columns: 1
-   :widths: 2 5
-
-   * - RCCL with MPI
-     - ``/opt/ompi/bin/mpirun -mca oob_tcp_if_exclude docker,lo -mca btl_tcp_if_exclude docker,lo -host {HOST1}:8,{HOST2}:8 -np 16 -x LD_LIBRARY_PATH=/opt/rccl/build/rccl/install/lib:/opt/ompi/lib -x NCCL_IB_GID_INDEX=3 -x NCCL_DEBUG=VERSION -x NCCL_IB_HCA=bnxt_re0,bnxt_re1,bnxt_re2,bnxt_re3,bnxt_re4,bnxt_re5,bnxt_re6,bnxt_re7 -x NCCL_IGNORE_CPU_AFFINITY=1 /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1``
