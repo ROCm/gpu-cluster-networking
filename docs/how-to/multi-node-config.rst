@@ -568,7 +568,7 @@ To optimize RCCL performance across nodes, most systems require additional ``mpi
 oob_tcp_if_exclude
 ^^^^^^^^^^^^^^^^^^
 
-MCA parameter that instructs OpenMPI to exclude a network interface when searching for out-of-band (OOB) TCP communications during the initation of ``mpirun``. Include this parameter if your system has interfaces that shouldn't be involved in RCCL operations. Multiple interfaces may be included as comma-separated values.
+MCA parameter that instructs OpenMPI to exclude a network interface when searching for out-of-band (OOB) TCP communications during the initiation of ``mpirun``. Include this parameter if your system has interfaces that shouldn't be involved in RCCL operations. Multiple interfaces may be included as comma-separated values.
 
 **Example**
 
@@ -622,7 +622,7 @@ NCCL_DEBUG_SUBSYS
 
 Used in conjunction with ``NCCL_DEBUG=INFO`` to filter information based on subsystem. Value is a comma separated list of subsystems to include in debugging.
 
-Accepted values are INIT (initialization, default value), COLL (collectives), P2P (peer-to-peer), SHM (shared memory), NET (network), GRAPH (topology detection and graph search), TUNING (algorith/protocol tuning), ENV (environment settings), ALLOC (memory allocations), and ALL (includes all subsystems).
+Accepted values are INIT (initialization, default value), COLL (collectives), P2P (peer-to-peer), SHM (shared memory), NET (network), GRAPH (topology detection and graph search), TUNING (algorithm/protocol tuning), ENV (environment settings), ALLOC (memory allocations), and ALL (includes all subsystems).
 
 **Example**
 
@@ -633,7 +633,7 @@ Accepted values are INIT (initialization, default value), COLL (collectives), P2
 NCCL_ALGO
 ^^^^^^^^^
 
-Sets the algorithm for a collective operation. Value may be either ``Ring`` or ``Tree``. A default value is set at each message size and differs between collectives (that is, a collective may use a tree algorithm at smaller message sizes and transition to a ring algorithm as the message size becomes larger). Defining ``NCCL_ALGO`` as a paremeter forces the selected algorithm for all message sizes.
+Sets the algorithm for a collective operation. Value may be either ``Ring`` or ``Tree``. A default value is set at each message size and differs between collectives (that is, a collective may use a tree algorithm at smaller message sizes and transition to a ring algorithm as the message size becomes larger). Defining ``NCCL_ALGO`` as a parameter forces the selected algorithm for all message sizes.
 
 **Example**
 
@@ -724,7 +724,7 @@ Enables use of local intranet during single-node RCCL testing. Use this if you w
 Run OSU Micro Benchmarks
 =========================
 
-Running the OSU Micro Benchmarks (OMB) with MPI simulates conditions similar to an AI/HPC workload over your cluster network and serves as a good back-up or secondary test to run and compare with RCCL results. As with RCCL, passwordless SSH and fingerpinting is required between all server pairs that will be tested. 
+Running the OSU Micro Benchmarks (OMB) with MPI simulates conditions similar to an AI/HPC workload over your cluster network and serves as a good back-up or secondary test to run and compare with RCCL results. As with RCCL, passwordless SSH and fingerprinting is required between all server pairs that will be tested. 
 
 OMB supports both point to point (pt2pt) operations between one discrete component on a server (host or device) to another, and the same collective operations already seen in the RCCL section.
 
@@ -803,7 +803,7 @@ Collective OSU benchmarks
 
       * - osu_alltoall 2N 16Proc
         - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D``
-        
+
       * - osu_allgather
         - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
 
