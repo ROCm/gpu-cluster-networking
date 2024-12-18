@@ -540,7 +540,7 @@ To run a RCCL test between two nodes, adjust the previous command as follows:
 
 The ``host`` parameter defines nodes to include in the run, where ``<node01>`` and ``<node02>`` are the respective IP or DNS addresses for those nodes, and ``:8`` represents the number of mpi processes (defined by ``np``) allocated to each node. The value for ``np`` is equal to the total number of GPUs included in the RCCL run across all nodes, which should also be equal to the total number of allocated processes per node (assuming each node has 8 GPUs). NICs included in the run are defined in ``NCCL_IB_HCA``, where ``<nic01>,<nic02>..`` are the RDMA device names for each NIC (``bnxt_re0, bnxt_re1..`` for Broadcom devices and ``mlx5_0,mlx5_2,..`` for Mellanox devices).
 
-You can scale this command to more nodes by incrementing the values for ``host`` and ``np`` accordingly. Alternatively, you can create a file with a list of hosts and use the ``--hostfile`` option in place of ``host`` if you have a larger number of nodes to test. For an explanation of how to format and invoke a hostfile, refer to the `OpenMPI Documentation <https://www.open-mpi.org/faq/?category=running#mpirun-hostfile>`_.
+You can scale this command to more nodes by incrementing the values for ``host`` and ``np`` accordingly. Alternatively, you can create a file with a list of hosts and use the ``--hostfile`` option in place of ``host`` if you have a larger number of nodes to test. For an explanation of how to format and invoke a hostfile, refer to the `Open MPI Documentation <https://www.open-mpi.org/faq/?category=running#mpirun-hostfile>`_.
 
 **4-node RCCL test**
 
@@ -568,7 +568,7 @@ To optimize RCCL performance across nodes, most systems require additional ``mpi
 oob_tcp_if_exclude
 ^^^^^^^^^^^^^^^^^^
 
-MCA parameter that instructs OpenMPI to exclude a network interface when searching for out-of-band (OOB) TCP communications during the initiation of ``mpirun``. Include this parameter if your system has interfaces that shouldn't be involved in RCCL operations. Multiple interfaces may be included as comma-separated values.
+MCA parameter that instructs Open MPI to exclude a network interface when searching for out-of-band (OOB) TCP communications during the initiation of ``mpirun``. Include this parameter if your system has interfaces that shouldn't be involved in RCCL operations. Multiple interfaces may be included as comma-separated values.
 
 **Example**
 
