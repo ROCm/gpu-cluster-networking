@@ -502,7 +502,7 @@ MPICH if needed). Otherwise, you can follow the steps to manually install at
 Run RCCL benchmarks
 ===================
 
-ROCm Communications Collectives Library (RCCL) is a set of collective operations that perform multi-GPU and multi-node communication over a network. These operations are ``AllReduce``, ``AllGather``, ``AlltoAll``, ``Broadcast``, ``ReduceScatter``, ``Reduce``, ``Scatter``, and ``Gather``, implemented as ring or tree algorithms. The **collective** descriptor for these operations means they can support multiple devices (GPUs) in a single run. As RCCL is specifically optimized for AMD GPUs, it's the standard by which performance can be tested and measured on cluster deployments.
+ROCm Communication Collectives Library (RCCL) is a set of collective operations that perform multi-GPU and multi-node communication over a network. These operations are ``AllReduce``, ``AllGather``, ``AlltoAll``, ``Broadcast``, ``ReduceScatter``, ``Reduce``, ``Scatter``, and ``Gather``, implemented as ring or tree algorithms. The **collective** descriptor for these operations means they can support multiple devices (GPUs) in a single run. As RCCL is specifically optimized for AMD GPUs, it's the standard by which performance can be tested and measured on cluster deployments.
 
 Communication between GPUs is handled over PCIe and XGMI interconnects within an individual node, while communication from node to node can run on RoCE, InfiniBand, or TCP/IP cluster networks.  
 
