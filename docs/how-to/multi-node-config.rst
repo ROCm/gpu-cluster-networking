@@ -504,15 +504,15 @@ Run RCCL benchmarks
 
 ROCm Communication Collectives Library (RCCL) is a set of collective operations that perform multi-GPU and multi-node communication over a network. These operations are ``AllReduce``, ``AllGather``, ``AlltoAll``, ``Broadcast``, ``ReduceScatter``, ``Reduce``, ``Scatter``, and ``Gather``, implemented as ring or tree algorithms. The **collective** descriptor for these operations means they can support multiple devices (GPUs) in a single run. As RCCL is specifically optimized for AMD GPUs, it's the standard by which performance can be tested and measured on cluster deployments.
 
-Communication between GPUs is handled over PCIe and XGMI interconnects within an individual node, while communication from node to node can run on RoCE, InfiniBand, or TCP/IP cluster networks.  
+Communication between GPUs is handled over PCIe and Infinity Fabric (XGMI) interconnects within an individual node, while communication from node to node can run on RoCE, InfiniBand, or TCP/IP cluster networks.  
 
 Although a version of RCCL is included with all ROCm installations, it is a standalone library that can be installed apart from ROCm as well.
 
 .. note::
    The paths for the MPI and RCCL commands in this section presume both are installed in the ``/opt`` directory. Installation paths for your environment may be different and should be updated accordingly.  
 
-Using MPI to run RCCL
----------------------
+Using MPI to run RCCL-test
+--------------------------
 
 You can use ``mpirun`` to initiate a RCCL operation from the command line. The command structure is described as follows:
 
@@ -531,16 +531,16 @@ Multi-node RCCL operations
 --------------------------
 
 .. note::
-  To successfully run multi-node RCCL, all nodes you plan to test must be configured with passwordless SSH and finger-printed, otherwise the runs fail.
+  To successfully run multi-node RCCL, all nodes you plan to test must be configured with passwordless SSH, otherwise the runs fail.
 
 To run a RCCL test between two nodes, adjust the previous command as follows:
 
 .. code-block:: shell
   /opt/ompi/bin/mpirun -host <node01>:8,<node02>:8 -np 16 -x NCCL_IB_HCA=<nic01>,<nic02>,<nic03>,<nic04>,<nic05>,<nic06>,<nic07>,<nic08> /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1
 
-The ``host`` parameter defines nodes to include in the run, where ``<node01>`` and ``<node02>`` are the respective IP or DNS addresses for those nodes, and ``:8`` represents the number of mpi processes (defined by ``np``) allocated to each node. The value for ``np`` is equal to the total number of GPUs included in the RCCL run across all nodes, which should also be equal to the total number of allocated processes per node (assuming each node has 8 GPUs). NICs included in the run are defined in ``NCCL_IB_HCA``, where ``<nic01>,<nic02>..`` are the RDMA names for each NIC (``bnxt_re0, bnxt_re1..`` for Broadcom devices and ``mlx5_0,mlx5_2,..`` for Mellanox).
+The ``host`` parameter defines nodes to include in the run, where ``<node01>`` and ``<node02>`` are the respective IP or DNS addresses for those nodes, and ``:8`` represents the number of mpi processes (defined by ``np``) allocated to each node. The value for ``np`` is equal to the total number of GPUs included in the RCCL run across all nodes, which should also be equal to the total number of allocated processes per node (assuming each node has 8 GPUs). NICs included in the run are defined in ``NCCL_IB_HCA``, where ``<nic01>,<nic02>..`` are the RDMA device names for each NIC (``bnxt_re0, bnxt_re1..`` for Broadcom devices and ``mlx5_0,mlx5_2,..`` for Mellanox devices).
 
-You can scale this command to more nodes by incrementing the values for ``host`` and ``np`` accordingly.
+You can scale this command to more nodes by incrementing the values for ``host`` and ``np`` accordingly. Alternatively, you can create a file with a list of hosts and use the ``--hostfile`` option in place of ``host`` if you have a larger number of nodes to test. For an explanation of how to format and invoke a hostfile, refer to the `OpenMPI Documentation <https://www.open-mpi.org/faq/?category=running#mpirun-hostfile>`_.
 
 **4-node RCCL test**
 
@@ -587,6 +587,23 @@ Provides the same function as ``oob_tcp_if_exclude``, but for BTL OOB communicat
 
   -mca oob_btl_if_exclude=<interface1>,<interface2>
 
+A common scenario for using these options together is when a node has docker and loopback (lo) interfaces that interfere with Open MPI internal communications and can cause a hang when running operations.
+
+.. code-block:: shell
+
+  $ ip a
+
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+      ...
+  12: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default
+      ...
+  
+You can exclude these interfaces from an Open MPI run by adding these options to your command string:
+
+.. code-block:: shell
+
+  -mca oob_tcp_if_exclude docker,lo -mca btl_tcp_if_exclude docker,lo
+
 NCCL_NET_GDR_LEVEL
 ^^^^^^^^^^^^^^^^^^
 
@@ -609,7 +626,7 @@ For most configurations, ``PHB`` is the recommended value.
 NCCL_DEBUG
 ^^^^^^^^^^
 
-Including this parameter displays various levels of information for debugging. Useful values include ``VERSION`` to display the RCCL version, linked ROCm version, and the RCCL git tag, while ``INFO`` displays information for all supported subsystems (see NCCL_DEBUG_SUBSYS).
+Including this parameter displays various levels of information for debugging. Useful values include ``VERSION`` to display the RCCL version, linked ROCm version, and the RCCL git tag, while ``INFO`` displays debugging information that can be useful when trying to diagnose reasons for hangs or other errors while running RCCL tests. It can also be used with ``NCCL_DEBUG_SUBSYS`` to view subsystem information.
 
 **Example**
 
@@ -755,21 +772,23 @@ Commands in the table below must run on two nodes with RoCE or InfiniBand interc
         - Usage
 
       * - osu_bw
-        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_bw -d rocm``
+        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_bw -d rocm``
 
       * - osu_bibw
-        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_bibw -d rocm``
+        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_bibw -d rocm``
 
       * - osu_mbw_mr
-        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_mbw_mr -d rocm``
+        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_mbw_mr -d rocm``
 
       * - osu_latency
-        - ``/$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency -d rocm``
+        - ``/$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency -d rocm``
 
       * - osu_multi_lat
-        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_multi_lat -d rocm``
+        - ``$OMPI_DIR/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host <node1-IP>,<node2-IP> -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc $OSU_DIR/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_multi_lat -d rocm``
 
 You can change communications mode by appending ``D D`` to the end of command for D2D, or ``D H`` for D2H (and vice-versa).
+
+For more information on MCA parameter options, refer to the `Module Component Architecture (MCA) <https://docs.open-mpi.org/en/v5.0.x/mca.html>` documentation for Open MPI.
 
 Collective OSU benchmarks
 -------------------------
@@ -793,19 +812,19 @@ Collective OSU benchmarks
         - Usage
 
       * - osu_allreduce
-        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allreduce -d rocm D D``
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allreduce -d rocm D D``
       
       * - osu_allreduce 2N 16Proc
-        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allreduce -d rocm D D``
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allreduce -d rocm D D``
 
       * - osu_alltoall
-        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D``
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D``
 
       * - osu_alltoall 2N 16Proc
-        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D``
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_alltoall -d rocm D D``
 
       * - osu_allgather
-        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 2 -host 10.1.10.110,10.1.10.72 -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
 
       * - osu_allgather 2N 16Proc
-        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x MV2_USE_ROCM=1 -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
+        - ``/opt/ompi/bin/mpirun --mca pml ucx --mca osc ucx --mca spml ucx --mca btl ^self,vader,openib --mca coll_hcoll_enable 0 --bind-to none -np 16 -hostfile ./hostfile -x UCX_TLS=all -x HIP_VISIBLE_DEVICES=1 numactl --localalloc /opt/osu-7.3/libexec/osu-micro-benchmarks/mpi/collective/osu_allgather -d rocm D D``
