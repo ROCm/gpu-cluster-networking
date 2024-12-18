@@ -587,7 +587,7 @@ Provides the same function as ``oob_tcp_if_exclude``, but for BTL OOB communicat
 
   -mca oob_btl_if_exclude=<interface1>,<interface2>
 
-A common scenario for using these options together is when a node has docker and loopback (lo) interfaces that interfere with Open MPI internal communications and can cause a hang when running operations.
+A common scenario for using these options together is when a node has Docker and Loopback (lo) interfaces that interfere with Open MPI internal communications and can cause a hang when running operations.
 
 .. code-block:: shell
 
