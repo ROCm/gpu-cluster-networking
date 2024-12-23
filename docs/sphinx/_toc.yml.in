@@ -5,6 +5,8 @@ root: index
 subtrees:
 - caption: How to
   entries:
+  - file: how-to/gpu-enabled-mpi
+    title: Enabling MPI
   - file: how-to/single-node-config
     title: Single-node networking
   - file: how-to/multi-node-config
