@@ -30,6 +30,7 @@ optimal speed and bandwidth during operation.
    .. grid-item-card:: Reference
 
       * :doc:`reference/hardware-support`
+      * `MI300 Series Cluster Architecture (External) <https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/other/instinct-mi300-series-custer-reference-guide.pdf>`_
 
 .. note::
 

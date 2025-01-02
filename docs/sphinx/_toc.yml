@@ -3,9 +3,16 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
-- caption: Networking Guides
+- caption: How to
   entries:
+  - file: how-to/gpu-enabled-mpi
+    title: Enabling MPI
   - file: how-to/single-node-config
-    title: Single Node Networking
+    title: Single-node networking
   - file: how-to/multi-node-config
-    title: Multi Node Networking
+    title: Multi-node networking
+- caption: Reference
+  entries:
+  - file: reference/hardware-support
+  - url: https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/other/instinct-mi300-series-custer-reference-guide.pdf
+    title: MI300 Series Cluster Architecture
