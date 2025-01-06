@@ -788,7 +788,7 @@ Commands in the table below must run on two nodes with RoCE or InfiniBand interc
 
 You can change communications mode by appending ``D D`` to the end of command for D2D, or ``D H`` for D2H (and vice-versa).
 
-For more information on MCA parameter options, refer to the `Module Component Architecture (MCA) <https://docs.open-mpi.org/en/v5.0.x/mca.html>` documentation for Open MPI.
+For more information on MCA parameter options, refer to the `Module Component Architecture (MCA) <https://docs.open-mpi.org/en/v5.0.x/mca.html>`_ documentation for Open MPI.
 
 Collective OSU benchmarks
 -------------------------
