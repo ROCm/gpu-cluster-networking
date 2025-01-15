@@ -168,7 +168,7 @@ packets and the number of simultaneous read requests, respectively. For optimal
 bandwidth, ensure that all GPUs and NICs are configured to use the maximum
 values for both attributes.
 
-#. Run ``sudo lspci -vvv <PCI address> | grep DevCtl: -C 2`` to review max
+#. Run ``sudo lspci -vvv -s <PCI address> | grep DevCtl: -C 2`` to review max
    payload size and max read request. Here is an example using the same NIC as
    before.
 
@@ -178,7 +178,7 @@ values for both attributes.
 
          .. code-block:: shell-session
 
-            $ sudo lspci -vvv 05:00.0 | grep DevCtl: -C 2
+            $ sudo lspci -vvv -s 05:00.0 | grep DevCtl: -C 2
 
             DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
                      ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 40.000W
@@ -190,7 +190,7 @@ values for both attributes.
 
          ::
 
-            sudo lspci -vvv 05:00.0 | grep DevCtl: -C 2
+            sudo lspci -vvv -s 05:00.0 | grep DevCtl: -C 2
 
 #. ``MaxReadRequest`` is unique because it can be changed during runtime with
    the ``setpci`` command. If your value here is lower than expected, you can
