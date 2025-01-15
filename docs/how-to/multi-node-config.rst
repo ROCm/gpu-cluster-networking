@@ -44,6 +44,11 @@ Check your BIOS settings to make sure they are optimized for AMD GPUs. See the
 
    If using virtual devices, AER and ACS should be enabled.
 
+.. important::
+
+  You must still run the :ref:`disable ACS script<disable-acs-script>` prior to running any workloads, as the BIOS
+  setting (if present) may not disable all ACS configurations at the OS level.
+
 Single tier switch configuration
 --------------------------------
 
