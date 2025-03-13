@@ -824,19 +824,19 @@ Run these scripts where indicated to aid in the configuration and setup of your 
 
       # Check if Relaxed Ordering is enabled
 
-      for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i getoption -name pcie_relaxed_ordering); done
+      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i getoption -name pcie_relaxed_ordering); done
 
       # Set Relaxed Ordering if not enabled 
 
-      for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i setoption -name pcie_relaxed_ordering -value 1); done
+      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i setoption -name pcie_relaxed_ordering -value 1); done
 
       # Check if RDMA support is enabled
 
-      for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i getoption -name support_rdma -scope 0) - $(sudo niccli -dev=$i \ getoption=support_rdma:1); done
+      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i getoption -name support_rdma -scope 0) - $(sudo niccli -dev=$i \ getoption=support_rdma:1); done
 
       # Set RMDA support if not enabled 
 
-      for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo \ niccli -dev=$i setoption -name support_rdma -scope 0 -value 1) - $(sudo niccli -dev=$i \ setoption -name support_rdma -scope 1 -value 1); done
+      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo \ niccli -dev=$i setoption -name support_rdma -scope 0 -value 1) - $(sudo niccli -dev=$i \ setoption -name support_rdma -scope 1 -value 1); done
 
       # Set Speed Mask
 
@@ -848,5 +848,5 @@ Run these scripts where indicated to aid in the configuration and setup of your 
 
       # Set performance profile to RoCE ==REQUIRES REBOOT IF OLDER FIRMWARE LOADED==
 
-      for i in $(sudo niccli listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo \ niccli -dev=$i setoption -name performance_profile -value 1); done
+      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo \ niccli -dev=$i setoption -name performance_profile -value 1); done
 
