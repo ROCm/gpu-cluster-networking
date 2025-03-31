@@ -9,6 +9,8 @@ subtrees:
     title: Single-node networking
   - file: how-to/multi-node-config
     title: Multi-node networking
+  - file: how-to/roce-config
+    title: RoCE network configuration  
 - caption: Reference
   entries:
   - file: reference/hardware-support
