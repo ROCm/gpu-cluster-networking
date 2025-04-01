@@ -2,9 +2,9 @@
    :description: Learn how to configure multiple nodes for network testing.
    :keywords: network validation, DCGPU, multi node, ROCm, RCCL, machine learning, LLM, usage, tutorial
 
-**************************************************************
+************************************************************************************************************************
 Multi-node network configuration for AMD Instinct accelerators
-**************************************************************
+************************************************************************************************************************
 
 After single node configuration testing has been completed and verified, validate network connections in node pairs. All
 the tests described in this topic must be run between two nodes in a client-server relationship. Both nodes must be
@@ -17,8 +17,7 @@ Prerequisites
 
 Before following the steps in this guide, complete the following prerequisites.
 
-* Install all required software for MPI in the
-  :doc:`ROCm documentation <rocm:how-to/gpu-enabled-mpi>`.
+* Install all required software for MPI in :doc:`./gpu-enabled-mpi`.
 
   * Specifically, follow the installation instructions for Open MPI, OSU benchmarks, and collective operations.
 
@@ -29,10 +28,11 @@ Before following the steps in this guide, complete the following prerequisites.
 * Implement passwordless SSH.
 
 Evaluate platform-specific BIOS tunings
----------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
-Check your BIOS settings to make sure they are optimized for AMD GPUs. See the 
-:doc:`AMD Instinct system optimization guides <rocm:how-to/system-optimization/index>` for more information.
+Check your BIOS settings to make sure they are optimized for AMD GPUs. See the `AMD Instinct system optimization
+guides <https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/index.html>`_ for more
+information.
 
 * Enable large bar addressing in the BIOS to support peer to peer GPU memory access.
 
@@ -50,7 +50,7 @@ Check your BIOS settings to make sure they are optimized for AMD GPUs. See the
   setting (if present) may not disable all ACS configurations at the OS level.
 
 Single tier switch configuration
---------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 Take these actions on each single tier (leaf/edge) switch you plan to include in network testing.
 
@@ -68,7 +68,7 @@ Take these actions on each single tier (leaf/edge) switch you plan to include in
 .. _OFED-Perftest-installation-and-benchmarking:
 
 OFED perftest installation and benchmarking
-============================================
+========================================================================================================================
 
 Install and run the `OFED performance tests <https://github.com/linux-rdma/perftest>`_ for host to host (H2H) testing.
 Loopback is implemented in the tests to remove the switch from benchmark results. Remember to install OFED perftests on
@@ -96,7 +96,7 @@ both nodes you plan to use in this section. Commands may require ``sudo`` depend
 #. Repeat these steps on a second node connected to the same switch.
 
 Run host-based (CPU) performance tests
-======================================
+========================================================================================================================
 
 Once installed, there are six main modules available with OFED perftests:
 
@@ -118,7 +118,7 @@ data transfer rates between nodes before introducing GPU traffic--as a result, t
 omitted from all commands.
 
 Run H2H RDMA benchmark
------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 To run the OFED perftest, establish an SSH connection to both nodes you installed the OFED perftests on.
 
@@ -187,27 +187,27 @@ useful for you.
 As servers typically have one NIC per GPU, you must change the device location frequently as you iterate through tests. 
 
 Run multithreaded H2H RDMA benchmark
--------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 To perform a multithreaded RDMA benchmark using the OFED perftest, run it concurrently on each NIC in the server. Use
 the ``taskset`` command to assign a CPU core within the same NUMA domain as the NICs. While testing the XGMI/Infinity
 Fabric link between CPUs is not required at this stage, it can be an optional test if desired.
 
 Run extended multithreaded H2H RDMA benchmark
----------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 Repeat the multithreaded RDMA benchmark, but loop the test and run it continuously for at least 8 hours. This extended
 test is designed to stress the I/O network fabric over a prolonged period to assess stability and performance under
 sustained load.
 
 Run device-based (GPU) OFED performance tests
-=============================================
+========================================================================================================================
 
 After confirming Host-to-Host (H2H) performance, proceed to run Device-to-Device (D2D) OFED perftests, which include GPU
 traffic. This will evaluate RDMA performance between GPUs.
 
 Run D2D RDMA benchmark
------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 To run a D2D RDMA benchmark, use the following example setup to test GPU pairs--for example, GPU0 to GPU1, GPU2 to GPU3.
 
@@ -277,7 +277,7 @@ network is tested.
    simultaneously.
 
 Run H2D/D2H RDMA benchmark
----------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 This is similar to the D2D test, but also includes the CPU on either the server or client side of the test-case
 scenarios. 
@@ -337,7 +337,7 @@ GPU or CPU being tested so that communication doesn't run between intra-node CPU
 isn't a goal now). 
 
 D2D RDMA multithread benchmark
-------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 For this test you must run the previous D2D benchmark simultaneously on all GPUs. Scripting is required to accomplish
 this, but the command input should resemble something like the following image with regard to your RDMA device naming
@@ -364,25 +364,25 @@ For bandwidth tests only:
   Requires user to break the runtime, otherwise runs indefinitely. 
 
 D2D RDMA multithread extended benchmark
----------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 Perform the D2D RDMA multithread benchmark again but set the duration for a minimum of 8 hours.
 
 Build collective tests 
-======================
+========================================================================================================================
 
 This section guides you through setting up the remaining tools necessary to simulate an AI workload on your GPU nodes
 after they have been sufficiently traffic-tested. Per the :ref:`prerequisites<Multinode-Prerequisites>`, UCX, UCC, MPI
 and the OSU benchmarks must already be installed.
 
 Install RCCL
--------------
+------------------------------------------------------------------------------------------------------------------------
 
 RCCL is likely already installed as part of ROCm on your compute nodes. Sometimes newer features and fixes might be
 available in the latest version of RCCL, which you can build from source at `<https://github.com/ROCm/rccl>`__.
 
 Build RCCL collective tests
----------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 To more easily build and run the RCCL collective tests, review and implement the script provided in the drop-down (the
 script also includes an option to install MPICH if needed). Otherwise, you can follow the steps to manually install at
@@ -483,7 +483,7 @@ script also includes an option to install MPICH if needed). Otherwise, you can f
       done
 
 Run RCCL benchmarks
-===================
+========================================================================================================================
 
 ROCm Communication Collectives Library (RCCL) is a set of collective operations that perform multi-GPU and multi-node
 communication over a network. These operations are ``AllReduce``, ``AllGather``, ``AlltoAll``, ``Broadcast``,
@@ -502,7 +502,7 @@ apart from ROCm as well.
   Installation paths for your environment may be different and should be updated accordingly.  
 
 Using MPI to run RCCL-test
---------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 You can use ``mpirun`` to initiate a RCCL operation from the command line. The command structure is described as
 follows:
@@ -522,7 +522,7 @@ Further examples in this guide continue to use ``AllReduce``, but you can run an
 path to point at your desired RCCL test.
 
 Multi-node RCCL operations
---------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 .. note::
   To successfully run multi-node RCCL, all nodes you plan to test must be configured with passwordless SSH, otherwise the
@@ -565,7 +565,7 @@ number of nodes to test. For an explanation of how to format and invoke a hostfi
   /opt/ompi/bin/mpirun -host <node01>:8,<node02>:8,<node03>:8,<node04>:8,<node05>:8,<node06>:8,<node07>:8,<node08>:8,<node09>:8,<node10>:8,<node11>:8,<node12>:8,<node13>:8,<node14>:8,<node15>:8,<node16>:8 -np 128 -x NCCL_IB_HCA=<nic01>,<nic02>,<nic03>,<nic04>,<nic05>,<nic06>,<nic07>,<nic08> /opt/rccl-tests/build/all_reduce_perf -b 8 -e 16G -f 2 -g 1
 
 Additional command parameters
------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 To optimize RCCL performance across nodes, most systems require additional ``mpirun`` parameters in tandem with
 system-specific tuning. This section provides a description of parameters that may be helpful for improving performance
@@ -573,7 +573,7 @@ depending on the design features of your cluster (network topology, NICs, OS, an
 provided at the command line or used in a pre-designed RCCL configuration file.
 
 oob_tcp_if_exclude
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 MCA parameter that instructs Open MPI to exclude a network interface when searching for out-of-band (OOB) TCP
 communications during the initiation of ``mpirun``. Include this parameter if your system has interfaces that shouldn't
@@ -586,7 +586,7 @@ be involved in RCCL operations. Multiple interfaces may be included as comma-sep
   -mca oob_btl_if_exclude=<interface1>,<interface2>
 
 oob_btl_if_exclude
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Provides the same function as ``oob_tcp_if_exclude``, but for BTL OOB communications. If excluding any interfaces, use both parameters.
 
@@ -615,7 +615,7 @@ You can exclude these interfaces from an Open MPI run by adding these options to
   -mca oob_tcp_if_exclude docker,lo -mca btl_tcp_if_exclude docker,lo
 
 NCCL_NET_GDR_LEVEL
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Used to define the maximum level of distance between a GPU and NIC at which GPU Direct RDMA/PeerDirect should be used.
 The GDR value is detected automatically based on PCI device topology, so setting this manually isn't typically necessary
@@ -636,7 +636,7 @@ For most configurations, ``PHB`` is the recommended value.
   NCCL_NET_GDR_LEVEL=PHB
 
 NCCL_DEBUG
-^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Including this parameter displays various levels of information for debugging. Useful values include ``VERSION`` to
 display the RCCL version, linked ROCm version, and the RCCL git tag, while ``INFO`` displays debugging information that
@@ -650,7 +650,7 @@ with ``NCCL_DEBUG_SUBSYS`` to view subsystem information.
   NCCL_DEBUG=VERSION
 
 NCCL_DEBUG_SUBSYS
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Used in conjunction with ``NCCL_DEBUG=INFO`` to filter information based on subsystem. Value is a comma separated list
 of subsystems to include in debugging.
@@ -666,7 +666,7 @@ settings), ALLOC (memory allocations), and ALL (includes all subsystems).
   NCCL_DEBUG=INFO NCCL_DEBUG_SUBSYS=INIT,GRAPH,NET,COLL
 
 NCCL_ALGO
-^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sets the algorithm for a collective operation. Value may be either ``Ring`` or ``Tree``. A default value is set at each
 message size and differs between collectives (that is, a collective may use a tree algorithm at smaller message sizes
@@ -680,7 +680,7 @@ selected algorithm for all message sizes.
   NCCL_ALGO=Ring
 
 NCCL_TOPO_FILE
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Loads a pre-existing topology XML file derived from a system with AMD GPUs before detecting node topology. Value is the
 path to the XML file.
@@ -697,7 +697,7 @@ path to the XML file.
   additional fields present in RCCL topology files.
 
 NCCL_TOPO_DUMP_FILE
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Creates a post-detection topology XML file in a user-defined location. Value is the path to where the file will be
 created or overwritten.
@@ -709,7 +709,7 @@ created or overwritten.
   NCCL_TOPO_DUMP_FILE=/path/to/topology-file.xml
 
 NCCL_IB_GID_INDEX
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sets the Global ID index (GID) for a RoCE device. In most cases for RoCEv2, the value should be set to ``3``, but you
 can verify this with the ``show_gids`` script on a Mellanox NIC and ``ibv_devinfo -vvv`` on a Broadcom NIC. Unnecessary
@@ -722,7 +722,7 @@ for InfiniBand networks.
   NCCL_IB_GID_INDEX=3
 
 NCCL_IB_QPS_PER_CONNECTION
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Defines the amount of queue pairs (QPs) to use per InfiniBand/RoCE connection. Default value is 1. Increasing the value
 can have performance impact as more connections require more memory.
@@ -734,7 +734,7 @@ can have performance impact as more connections require more memory.
   NCCL_IB_QPS_PER_CONNECTION=4
 
 NCCL_IB_PCI_RELAXED_ORDERING
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Determines the usage of relaxed ordering. 2 is the default value and uses relaxed ordering when available while setting
 a value of 1 forces relaxed ordering, and 0 disables it. 
@@ -746,7 +746,7 @@ a value of 1 forces relaxed ordering, and 0 disables it.
   NCCL_IB_PCI_RELAXED_ORDERING=1
 
 NCCL_SOCKET_IFNAME
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Explicitly defines the network interface for RCCL to use when initiating communications. This is useful to define when
 multiple interfaces present to ensure RCCL is using the intended interface. Multiple interfaces may be provided as comma
@@ -759,7 +759,7 @@ separated values.
   NCCL_SOCKET_IFNAME=<interface>
 
 RCCL_ENABLE_INTRANET
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Enables use of local intranet during single-node RCCL testing. Use this if you want to include the NICs and leaf switch
 while testing on single-node. Can deliver performance improvements as the CPU is assisted by the switch. To activate,
@@ -772,7 +772,7 @@ set value to ``1`` (Default value is ``0``, or deactivated).
   RCCL_ENABLE_INTRANET=1
 
 Run OSU Micro Benchmarks
-=========================
+========================================================================================================================
 
 Running the OSU Micro Benchmarks (OMB) with MPI simulates conditions similar to an AI/HPC workload over your cluster
 network and serves as a good back-up or secondary test to run and compare with RCCL results. As with RCCL, passwordless
@@ -832,7 +832,7 @@ For more information on MCA parameter options, refer to the `Module Component Ar
 <https://docs.open-mpi.org/en/v5.0.x/mca.html>`_ documentation for Open MPI.
 
 Collective OSU benchmarks
--------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 .. raw:: html
 
