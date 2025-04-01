@@ -40,6 +40,7 @@ Before following the steps in the following sections, ensure you have completed 
    supporting it. This must be done after each reboot.
 
    .. note::
+
       Some systems can disable ACS in BIOS. Observations of this feature show it does not always impact the operating
       system ACS configuration. Therefore, the disable ACS script must still be run before any workloads after a server
       has been rebooted.   

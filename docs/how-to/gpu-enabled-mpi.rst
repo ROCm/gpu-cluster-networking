@@ -99,7 +99,7 @@ You can use OSU Micro Benchmarks (OMB) to evaluate the performance of various pr
         --with-rocm=/opt/rocm \
         CC=$OMPI_DIR/bin/mpicc CXX=$OMPI_DIR/bin/mpicxx \
         LDFLAGS="-L$OMPI_DIR/lib/ -lmpi -L/opt/rocm/lib/ \
-        $(hipconfig -C) -lamdhip64" CXXFLAGS="-std=c++11"
+        $(hipconfig -C | tr -d '\n') -lamdhip64" CXXFLAGS="-std=c++11"
     make -j $(nproc)
 
 Intra-node run
