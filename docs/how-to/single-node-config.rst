@@ -22,6 +22,10 @@ Before following the steps in the following sections, ensure you have completed 
 
    * Install network drivers for NICs. If using InfiniBand, also install OpenSM.
 
+     .. note::
+
+        For MI325X, :ref:`ROCm version 6.3.1 or higher <MI325X-support>` is required. 
+
 #. Ensure network settings are correctly configured for your hardware.
 
 #. Configure system BIOS and OS settings according to :doc:`rocm:how-to/system-optimization/index` for your architecture
