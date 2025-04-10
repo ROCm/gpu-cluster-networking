@@ -1275,4 +1275,42 @@ The requirements for point-to-point routing are:
               table: 108
         version: 2
 
+.. dropdown:: Example - Sonic switch configuration with ports as gateways for /31 subnet mask
+   
+   .. code-block:: shell
+
+    $ sonic-cli
+    sonic# configure
+    sonic(config)# interface Eth 1/1
+    sonic(config-if-Eth1/1)# ip address 192.168.1.0/31
+    sonic(config-if-Eth1/1)# interface Eth 1/2
+    sonic(config-if-Eth1/2)# ip address 192.168.2.0/31
+    sonic(config-if-Eth1/2)# interface Eth 1/3
+    sonic(config-if-Eth1/3)# ip address 192.168.3.0/31
+    sonic(config-if-Eth1/3)# interface Eth 1/4
+    sonic(config-if-Eth1/4)# ip address 192.168.4.0/31
+    sonic(config-if-Eth1/4)# interface Eth 1/5
+    sonic(config-if-Eth1/5)# ip address 192.168.5.0/31
+    sonic(config-if-Eth1/5)# interface Eth 1/6
+    sonic(config-if-Eth1/6)# ip address 192.168.6.0/31
+    sonic(config-if-Eth1/6)# interface Eth 1/7
+    sonic(config-if-Eth1/7)# ip address 192.168.7.0/31
+    sonic(config-if-Eth1/7)# interface Eth 1/8
+    sonic(config-if-Eth1/8)# ip address 192.168.8.0/31
+    sonic(config-if-Eth1/8)# interface Eth 1/9
+    sonic(config-if-Eth1/9)# ip address 192.168.9.0/31
+    sonic(config-if-Eth1/9)# interface Eth 1/10
+    sonic(config-if-Eth1/10)# ip address 192.168.10.0/31
+    sonic(config-if-Eth1/10)# interface Eth 1/11
+    sonic(config-if-Eth1/11)# ip address 192.168.11.0/31
+    sonic(config-if-Eth1/11)# interface Eth 1/12
+    sonic(config-if-Eth1/12)# ip address 192.168.12.0/31
+    sonic(config-if-Eth1/12)# interface Eth 1/13
+    sonic(config-if-Eth1/13)# ip address 192.168.13.0/31
+    sonic(config-if-Eth1/13)# interface Eth 1/14
+    sonic(config-if-Eth1/14)# ip address 192.168.14.0/31
+    sonic(config-if-Eth1/14)# interface Eth 1/15
+    sonic(config-if-Eth1/15)# ip address 192.168.15.0/31
+    sonic(config-if-Eth1/15)# interface Eth 1/16
+    sonic(config-if-Eth1/16)# ip address 192.168.16.0/31
     
