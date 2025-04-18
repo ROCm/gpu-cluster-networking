@@ -4,11 +4,13 @@ on:
   push:
     branches:
     - develop
+    - staging
     - 'docs/*'
     - 'roc**'
   pull_request:
     branches:
     - develop
+    - staging
     - 'docs/*'
     - 'roc**'
 
