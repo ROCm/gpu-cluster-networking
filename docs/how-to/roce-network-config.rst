@@ -1176,141 +1176,137 @@ The requirements for point-to-point routing are:
 * Each NIC on a host must have a /31 network mask (for example, 192.168.131.X/31).
 * Each connected backend switch port must have an IP address that the NIC interface can use as a gateway.
 
-.. Note:: 
-  Point to point routing has a scaling limit of up to 128 NICs and is only recommended for small clusters. 
 
-.. dropdown:: Example - Host netplan file that uses different subnets for the NICs
+.. dropdown:: Example – point-to-point /31 IPV4 routing host netplan file
    
    .. code-block:: shell
 
       network:
         ethernets:
-          enp28s0np0:
-            mtu: 9000
-            addresses:
-            -  192.168.7.1/31
-            routing-policy:
-            - from: 192.168.7.1
-              table: 101
-            routes:
-            - to: 0.0.0.0/0
-              via: 192.168.7.0
-              table: 101
-          enp62s0np0:
-            mtu: 9000
-            addresses:
-            - 192.168.8.1/31
-            routing-policy:
-            - from: 192.168.8.1
-              table: 102
-            routes:
-            - to: 0.0.0.0/0
-              via: 192.168.8.0
-              table: 102
-          enp79s0np0:
-            mtu: 9000
-            addresses:
-            - 192.168.6.1/31
-            routing-policy:
-            - from: 192.168.6.1
-              table: 103
-            routes:
-            - to: 0.0.0.0/0
-              via: 192.168.6.0
-              table: 103
-          enp96s0np0:
-            mtu: 9000
-            addresses:
-            - 192.168.5.1/31
-            routing-policy:
-            - from: 192.168.5.1
-              table: 104
-            routes:
-            - to: 0.0.0.0/0
-              via: 192.168.5.0
-              table: 104
-          enp158s0np0:
+          eth1:
             mtu: 9000
             addresses:
             - 192.168.1.1/31
             routing-policy:
             - from: 192.168.1.1
-              table: 105
+              table: 101
             routes:
             - to: 0.0.0.0/0
               via: 192.168.1.0
+              table: 101
+          eth2:
+            mtu: 9000
+            addresses:
+            - 192.168.1.3/31
+            routing-policy:
+            - from: 192.168.1.3
+              table: 102
+            routes:
+            - to: 0.0.0.0/0
+              via: 192.168.1.2
+              table: 102
+          eth3:
+            mtu: 9000
+            addresses:
+            - 192.168.1.5/31
+            routing-policy:
+            - from: 192.168.1.5
+              table: 103
+              routes:
+            - to: 0.0.0.0/0
+              via: 192.168.1.4
+              table: 103
+          eth4:
+            mtu: 9000
+            addresses:
+            - 192.168.1.7/31
+            routing-policy:
+            - from: 192.168.1.7
+              table: 104
+            routes:
+            - to: 0.0.0.0/0
+              via: 192.168.1.6
+              table: 104
+          eth5:
+            mtu: 9000
+            addresses:
+            - 192.168.1.9/31
+            routing-policy:
+            - from: 192.168.1.9
               table: 105
-          enp190s0np0:
+            routes:
+            - to: 0.0.0.0/0
+              via: 192.168.1.8
+              table: 105
+          eth6:
             mtu: 9000
             addresses:
-            - 192.168.2.1/31
+            - 192.168.1.11/31
             routing-policy:
-            - from: 192.168.2.1
+            - from: 192.168.1.11
               table: 106
             routes:
             - to: 0.0.0.0/0
-              via: 192.168.2.0
+              via: 192.168.1.10
               table: 106
-          enp206s0np0:
+          eth7:
             mtu: 9000
             addresses:
-            - 192.168.3.1/31
+            - 192.168.1.13/31
             routing-policy:
-            - from: 192.168.3.1
+            - from: 192.168.1.13
               table: 107
             routes:
             - to: 0.0.0.0/0
-              via: 192.168.3.0
+              via: 192.168.1.12
               table: 107
-          enp222s0np0:
+          eth8:
             mtu: 9000
             addresses:
-            - 192.168.4.1/31
+            - 192.168.1.15/31
             routing-policy:
-            - from: 192.168.4.1
+            - from: 192.168.1.15
               table: 108
             routes:
             - to: 0.0.0.0/0
-              via: 192.168.4.0
+              via: 192.168.1.14
               table: 108
         version: 2
 
-.. dropdown:: Example - Sonic switch configuration with ports as gateways for /31 subnet mask
+.. dropdown:: Example - point-to-point /31 IPV4 routing on the switch side. Applicable to many OS including Sonic and EOS
    
    .. code-block:: shell
 
-    $ sonic-cli
-    sonic# configure
-    sonic(config)# interface Eth 1/1
-    sonic(config-if-Eth1/1)# ip address 192.168.1.0/31
-    sonic(config-if-Eth1/1)# interface Eth 1/2
-    sonic(config-if-Eth1/2)# ip address 192.168.2.0/31
-    sonic(config-if-Eth1/2)# interface Eth 1/3
-    sonic(config-if-Eth1/3)# ip address 192.168.3.0/31
-    sonic(config-if-Eth1/3)# interface Eth 1/4
-    sonic(config-if-Eth1/4)# ip address 192.168.4.0/31
-    sonic(config-if-Eth1/4)# interface Eth 1/5
-    sonic(config-if-Eth1/5)# ip address 192.168.5.0/31
-    sonic(config-if-Eth1/5)# interface Eth 1/6
-    sonic(config-if-Eth1/6)# ip address 192.168.6.0/31
-    sonic(config-if-Eth1/6)# interface Eth 1/7
-    sonic(config-if-Eth1/7)# ip address 192.168.7.0/31
-    sonic(config-if-Eth1/7)# interface Eth 1/8
-    sonic(config-if-Eth1/8)# ip address 192.168.8.0/31
-    sonic(config-if-Eth1/8)# interface Eth 1/9
-    sonic(config-if-Eth1/9)# ip address 192.168.9.0/31
-    sonic(config-if-Eth1/9)# interface Eth 1/10
-    sonic(config-if-Eth1/10)# ip address 192.168.10.0/31
-    sonic(config-if-Eth1/10)# interface Eth 1/11
-    sonic(config-if-Eth1/11)# ip address 192.168.11.0/31
-    sonic(config-if-Eth1/11)# interface Eth 1/12
-    sonic(config-if-Eth1/12)# ip address 192.168.12.0/31
-    sonic(config-if-Eth1/12)# interface Eth 1/13
-    sonic(config-if-Eth1/13)# ip address 192.168.13.0/31
-    sonic(config-if-Eth1/13)# interface Eth 1/14
-    sonic(config-if-Eth1/14)# ip address 192.168.14.0/31
-    sonic(config-if-Eth1/14)# interface Eth 1/15
-    sonic(config-if-Eth1/15)# ip address 192.168.15.0/31
-    sonic(config-if-Eth1/15)# interface Eth 1/16
-    sonic(config-if-Eth1/16)# ip address 192.168.16.0/31
+      !
+      interface Eth1/1
+       description node1-eth1
+       ip address 192.168.1.0/31
+      !
+      interface Eth1/2
+       description node1-eth2
+       ip address 192.168.1.2/31
+      !
+      interface Eth1/3
+       description node1-eth3
+       ip address 192.168.1.4/31
+      !
+      interface Eth1/4
+       description node1-eth4
+       ip address 192.168.1.6/31
+      !
+      interface Eth1/5
+       description node1-eth5
+       ip address 192.168.1.8/31
+      !
+      interface Eth1/6
+       description node1-eth6
+       ip address 192.168.1.10/31
+      !
+      interface Eth1/7
+       description node1-eth7
+       ip address 192.168.1.12/31
+      !
+      interface Eth1/8
+       description node1-eth8
+       ip address 192.168.1.14/31
     
