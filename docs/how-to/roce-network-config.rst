@@ -55,7 +55,7 @@ Enable RoCE support mode
 ------------------------------------------------------------------------------------------------------------------------
 
 Most RoCE-capable NICs have a feature flag that must be set before they can communicate through RDMA. As the default
-setting for this feature differs by NIC vendor and model, you must averify all NICs are configured to support RoCE
+setting for this feature differs by NIC vendor and model, you must verify all NICs are configured to support RoCE
 before running tests.
 
 As an example, Broadcom NICs use the ``support_rdma`` flag to govern this feature. You can check the status with the
@@ -171,7 +171,7 @@ Enable DCQCN through QoS configuration
 
 Data Center Quantized Congestion Notification (DCQCN) is a traffic control method achieved by enabling two features,
 Explicit Congestion Notification (ECN) and Priority Flow Control (PFC), to support end-to-end lossless ethernet in a
-datacenter environment.
+data center environment.
 
 In communication between NICs, ECN detects congestion in PCIe switch buffers and alerts the endpoint (receiving NIC)
 through packet ECN bits. The receiving NIC then transmits a congestion notification package (CNP) to the sending NIC to
