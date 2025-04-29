@@ -1176,8 +1176,7 @@ The requirements for point-to-point routing are:
 * Each NIC on a host must have a /31 network mask (for example, 192.168.131.X/31).
 * Each connected backend switch port must have an IP address that the NIC interface can use as a gateway.
 
-
-.. dropdown:: Example – point-to-point /31 IPV4 routing host netplan file
+.. dropdown:: Example - point-to-point /31 IPV4 routing host netplan file
    
    .. code-block:: shell
 
@@ -1273,7 +1272,7 @@ The requirements for point-to-point routing are:
               table: 108
         version: 2
 
-.. dropdown:: Example - point-to-point /31 IPV4 routing on the switch side. Applicable to many OS including Sonic and EOS
+.. dropdown:: Example - Switch configuration for point-to-point /31 IPV4 routing (applicable for Sonic, EOS, and others)
    
    .. code-block:: shell
 
