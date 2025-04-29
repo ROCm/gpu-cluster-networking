@@ -43,7 +43,7 @@ conf
 egressing
 gbits
 hostfile
-microarchitecture
+microarchitectures
 mlx
 mpi
 mtu
