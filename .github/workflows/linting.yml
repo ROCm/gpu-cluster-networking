@@ -7,12 +7,14 @@ on:
     - staging
     - 'docs/*'
     - 'roc**'
+    - staging
   pull_request:
     branches:
     - develop
     - staging
     - 'docs/*'
     - 'roc**'
+    - staging
 
 jobs:
   call-workflow-passing-data:
