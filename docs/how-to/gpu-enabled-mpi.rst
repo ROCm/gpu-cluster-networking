@@ -69,9 +69,9 @@ ROCm, use the following instructions.
 
       export OMPI_DIR=$INSTALL_DIR/ompi
       cd $BUILD_DIR
-      git clone --recursive https://github.com/open-mpi/ompi.git \
-          -b v5.0.x
-      cd ompi
+      wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.7.tar.gz
+      tar zxvf openmpi-5.0.7.tar.gz
+      cd ompi-5.0.7/ 
       ./autogen.pl
       mkdir build
       cd build
@@ -98,8 +98,9 @@ You can use OSU Micro Benchmarks (OMB) to evaluate the performance of various pr
     ./configure --enable-rocm \
         --with-rocm=/opt/rocm \
         CC=$OMPI_DIR/bin/mpicc CXX=$OMPI_DIR/bin/mpicxx \
-        LDFLAGS="-L$OMPI_DIR/lib/ -lmpi -L/opt/rocm/lib/ \
-        $(hipconfig -C | tr -d '\n') -lamdhip64" CXXFLAGS="-std=c++11"
+        LDFLAGS="-L$OMPI_DIR/lib/ -lmpi -L/opt/rocm/lib/ -lamdhip64" \
+        CFLAGS="$(hipconfig -C | tr -d '\n')"
+        CXXFLAGS="-std=c++11"
     make -j $(nproc)
 
 Intra-node run
