@@ -69,9 +69,9 @@ ROCm, use the following instructions.
 
       export OMPI_DIR=$INSTALL_DIR/ompi
       cd $BUILD_DIR
-      git clone --recursive https://github.com/open-mpi/ompi.git \
-          -b v5.0.x
-      cd ompi
+      wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.7.tar.gz
+      tar zxvf openmpi-5.0.7.tar.gz
+      cd ompi-5.0.7/ 
       ./autogen.pl
       mkdir build
       cd build

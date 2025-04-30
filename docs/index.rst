@@ -24,8 +24,10 @@ optimal speed and bandwidth during operation.
 
    .. grid-item-card:: How to
 
+      * :doc:`Enabling MPI <how-to/gpu-enabled-mpi>`
       * :doc:`Single-node network configuration <how-to/single-node-config>`
       * :doc:`Multi-node network configuration <how-to/multi-node-config>`
+      * :doc:`RoCE network configuration <how-to/roce-network-config>`
 
    .. grid-item-card:: Reference
 
