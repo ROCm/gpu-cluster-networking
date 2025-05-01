@@ -9,7 +9,7 @@ RoCE cluster network configuration guide for AMD Instinct accelerators
 RDMA over Converged Ethernet (RoCE) is a network protocol can deliver speeds comparable to InfiniBand when running
 AI/HPC workloads, and offer lower cost than InfiniBand due their compatibility with standard ethernet architecture.
 
-This guide contains instructions for optimizing the performance of a RoCE cluster network by at the network interface
+This guide contains instructions for optimizing the performance of a RoCE cluster network at the network interface
 card (NIC) and switch level with proper configuration, as well as routing directions to mitigate issues like MAC address
 mismatch (ARP flux) that can occur establishing RDMA sessions on nodes with multiple NICs.
 
@@ -352,7 +352,7 @@ required to match the port name to its physical label.
 
       #. While in configuration mode, run ``interface-naming standard extended`` as a command.
 
-      #. Run ``write memory`` as a commdn.
+      #. Run ``write memory`` as a command.
 
       #. Log out of the switch, then log back in to view the change in interface names.
 
@@ -726,9 +726,9 @@ be answered by every available interface on that host.
 
 For an HPC/AI cluster, an incorrect MAC address in the ARP table can have several impacts on RDMA traffic:
 
-#. Communication may fail if the interface corresponding to the returned (incorrect) MAC address has no open RDMA
+*  Communication may fail if the interface corresponding to the returned (incorrect) MAC address has no open RDMA
    session. 
-#. Multiple IP addresses map to the same MAC address resulting in one NIC receiving excessive traffic while other NICs
+*  Multiple IP addresses map to the same MAC address resulting in one NIC receiving excessive traffic while other NICs
    are idle, causing a performance bottleneck. 
 
 This section discusses two methods for mitigating the effects for ARP flux: IPV4 configuration at the host level or
