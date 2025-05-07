@@ -11,6 +11,8 @@ subtrees:
     title: Single-node networking
   - file: how-to/multi-node-config
     title: Multi-node networking
+  - file: how-to/multi-node-inference-lb.md
+    title: Multi-Node Inference Load Balancing 
   - file: how-to/roce-network-config
     title: RoCE network configuration  
 - caption: Reference

@@ -21,4 +21,4 @@ html_theme = "rocm_docs_theme"
 html_theme_options = {
     "flavor": "instinct"
 }
-extensions = ["rocm_docs"]
+extensions = ["rocm_docs", "sphinxcontrib.mermaid"]

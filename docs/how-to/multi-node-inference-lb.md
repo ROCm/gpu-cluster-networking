@@ -6,17 +6,40 @@ This guide describes how to set up a scalable multi-node LLM inference cluster.
 
 This solution implements a distributed LLM inference system with three main components:
 
-* **Backend Layer**: Multiple inference nodes running vLLM or SGLang servers on AMD GPUs using tensor parallelism
-* **API Gateway Layer**A LiteLLM-based load balancer that distributes requests across backend nodes
+* **Inference Pool**: Multiple inference nodes running vLLM or SGLang servers on AMD GPUs using tensor parallelism
+* **API Gateway Layer**: Choose the load balancer solution that supports your operational requirements. This guide demonstrates these options:
+  * A [LiteLLM](https://docs.litellm.ai/docs/)-based load balancer
+  * An [nginx](https://nginx.org/)-based load balancer
 * **Monitoring Layer**: Prometheus and Grafana for metrics collection and visualization
 
-This architecture allows horizontal scaling by adding more backend nodes while maintaining a single API endpoint for client applications. The system supports various model sizes:
+This architecture allows horizontal scaling by adding more inference nodes while maintaining a single API endpoint for client applications. The system supports various model sizes:
 
 * **Small Models**: Can run efficiently on a single GPU
 * **Medium Models**: Typically require 2+ GPUs with tensor parallelism
 * **Large Models**: Requires multi-node deployments for high availability
 
 **Tensor Parallelism** distributes model layers across multiple GPUs, allowing inference of models too large to fit in a single GPU's memory. The `--tensor-parallel-size` (`-tp`) parameter determines how many GPUs will share the model weights.
+
+### Logical Diagram
+
+```{mermaid}
+flowchart TD
+    clients["Client Applications"] --> gateway["API Gateway Layer"]
+    gateway -->node1 & node2 & nodeN
+
+    subgraph "Inference Nodes"
+        node1["Inference Node 1"]
+        node2["Inference Node 2"]
+        nodeN["Inference Node N"]
+    end
+    
+    classDef main fill:#f9f9f9,stroke:#333,stroke-width:2px
+    classDef gateway fill:#9cf,stroke:#333
+    classDef nodes fill:#f96,stroke:#333
+    
+    class clients,gateway,inference main
+    class node1,node2,nodeN nodes
+```
 
 ## Prerequisites
 
@@ -25,7 +48,7 @@ This architecture allows horizontal scaling by adding more backend nodes while m
 * Network connectivity between nodes
 * Models downloaded to a shared or local storage location
 
-## NUMA Configuration
+### NUMA Configuration
 
 Before starting the inference servers, it's recommended to disable automatic NUMA balancing on each node for optimal performance:
 
@@ -37,11 +60,15 @@ sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'
 cat /proc/sys/kernel/numa_balancing
 ```
 
-## Project Structure
+## Deployment
+
+This section describes the steps needed to deploy the required components for multi-node inference load balancing.
+
+### Project Structure
 
 ```text
 /llm-cluster/
-├── backend/                # Backend inference node files
+├── nodes/                # Inference node files
 │   ├── docker-compose.yml
 │   └── .env               # GPU and model configurations
 ├── gateway/               # API Gateway/Load Balancer files
@@ -56,18 +83,18 @@ cat /proc/sys/kernel/numa_balancing
         └── datasources.yml
 ```
 
-## Backend Layer Setup
+### Inference Pool Setup
 
 **On each inference node:**
 
-Create the backend directory structure:
+Create the directory structure:
 
 ```bash
-mkdir -p ~/llm-cluster/backend
-cd ~/llm-cluster/backend
+mkdir -p ~/llm-cluster/nodes
+cd ~/llm-cluster/nodes
 ```
 
-Create `docker-compose.yml`:
+Create a `docker-compose.yml` file for the inference nodes:
 
 ```yaml
 services:
@@ -96,7 +123,7 @@ services:
     restart: unless-stopped
 
   sglang:
-    image: lmsysorg/sglang:v0.4.4.post1-rocm630
+    image: lmsysorg/sglang:v0.4.6.post2-rocm630
     container_name: sglang_${NODE_ID:-node1}
     shm_size: ${SHM_SIZE:-32GB}
     ipc: host
@@ -137,24 +164,26 @@ PORT=8000
 SHM_SIZE=32GB
 ```
 
-Start the backend services:
+Start the inference services:
 
 ```bash
 docker-compose up -d
 ```
 
-## API Gateway Setup
+### API Gateway Setup
 
-On the head node:
-
-Create the gateway directory structure:
+On the API Gateway node, create the gateway directory structure:
 
 ```bash
 mkdir -p ~/llm-cluster/gateway
 cd ~/llm-cluster/gateway
 ```
 
-Create `docker-compose.yml`:
+#### Option 1: LiteLLM-based Load Balancer
+
+LiteLLM provides routing, load balancing, and observability for LLM API calls, supporting multiple LLM providers and models through a unified interface.
+
+Create `docker-compose.yml` for LiteLLM:
 
 ```yaml
 services:
@@ -210,7 +239,96 @@ Create `.env`:
 LITELLM_MASTER_KEY=your_secret_master_key
 ```
 
-Start the gateway services:
+Start the LiteLLM gateway:
+
+```bash
+docker-compose up -d
+```
+
+#### Option 2: Nginx-based Load Balancer
+
+Nginx provides a high-performance, scalable HTTP server and reverse proxy that can efficiently distribute traffic across multiple inference nodes.
+
+Create `nginx.conf`:
+
+```nginx
+worker_processes auto;
+worker_rlimit_nofile 65535;
+events {
+    worker_connections 65535;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile      on;
+    keepalive_timeout 65;
+
+    # Define upstream server group
+    upstream vllm_pool {
+        # Use least_conn for distributing traffic based on least number of current connections
+        least_conn;
+        
+        # Add inference server entries - update with your node hostnames/IPs
+        server node0:8000;
+        server node1:8000;
+        # Add additional nodes as needed
+        # server nodeN:8000;
+        
+        keepalive 32;
+    }
+
+    server {
+        listen 80;
+        
+        # Health check endpoint
+        location /health {
+            return 200 'healthy\n';
+            add_header Content-Type text/plain;
+        }
+
+        # API endpoint for frontend clients
+        location / {
+            proxy_pass http://vllm_pool;
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            
+            # Timeouts for long-running inference requests
+            proxy_connect_timeout 300s;
+            proxy_read_timeout 300s;
+            proxy_send_timeout 300s;
+            
+            # Buffer settings for large responses
+            proxy_buffer_size 16k;
+            proxy_buffers 8 16k;
+            proxy_busy_buffers_size 32k;
+        }
+    }
+}
+```
+
+Create `docker-compose.yml` for Nginx:
+
+```yaml
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx_gateway
+    network_mode: host
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+Start the Nginx gateway:
 
 ```bash
 docker-compose up -d
@@ -227,12 +345,23 @@ mkdir -p ~/llm-cluster/monitoring/{prometheus,grafana}
 cd ~/llm-cluster/monitoring
 ```
 
-Create `docker-compose.yml`:
+Create `docker-compose.yml` for monitoring:
 
 ```yaml
 version: '3.8'
 
+
 services:
+  device-metrics-exporter:
+    image: rocm/device-metrics-exporter:v1.2.1
+    container_name: device-metrics-exporter
+    restart: unless-stopped
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    ports:
+      - "5000:5000"
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -270,14 +399,46 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
+  # Inference servers
   - job_name: 'vllm'
+    metrics_path: /metrics
+    scrape_interval: 15s
     static_configs:
-      - targets: ['node1:8000', 'node2:8000']
+      - targets: ['node0:8000', 'node1:8000'] # Add additional nodes as needed
+        labels:
+          service: 'vllm'
+
+  # LiteLLM Gateway metrics (if using LiteLLM)
+  - job_name: 'litellm'
+    metrics_path: /metrics
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['localhost:4000']
+        labels:
+          service: 'litellm_gateway'
+  
+  # Nginx Gateway metrics (if using Nginx with nginx-prometheus-exporter)
+  - job_name: 'nginx'
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['localhost:9113']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'nginx-gateway'
+
+  # AMD GPU device metrics
+  - job_name: 'amd_gpu_metrics'
+    scrape_interval: 5s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['node0:5000', 'node1:5000']
+        labels:
+          service: 'amd_gpu_metrics'        
 ```
 
-```{note}
-Replace `node1` and `node2` with the hostname or IP address of your nodes
-```
+> **Note:** Replace `node0` and `node1` with the hostname or IP address of your inference nodes
 
 Create `datasources.yml`:
 
@@ -298,7 +459,61 @@ Start the monitoring services:
 docker-compose up -d
 ```
 
+### Gateway-Specific Monitoring Setup
+
+#### For LiteLLM Gateway
+
+LiteLLM includes built-in metrics that can be viewed in the Grafana dashboard. No additional configuration is needed beyond the Prometheus scrape configuration above.
+
+#### For Nginx Gateway
+
+To monitor Nginx, you can add the nginx-prometheus-exporter to your gateway setup:
+
+* Update the `docker-compose.yml` for Nginx to include the exporter:
+
+```yaml
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx_gateway
+    network_mode: host
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    command:
+      - -nginx.scrape-uri=http://localhost/metrics
+      - -nginx.retries=5
+      - -web.listen-address=:9113      
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - nginx
+```
+
+Add a status endpoint to your `nginx.conf`:
+
+```text
+# Inside the server block, add:
+location /metrics {
+    stub_status on;
+    access_log off;
+    allow 127.0.0.1;
+    deny all;
+}
+```
+
 ## Test the Multi-Node Serving Configuration
+
+### Testing with LiteLLM Gateway
 
 Send one request to the LiteLLM endpoint at localhost:4000
 
@@ -309,21 +524,48 @@ curl http://localhost:4000/v1/completions \
   -d '{"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}'
 ```
 
+### Testing with Nginx Gateway
+
+Send one request to the Nginx endpoint at localhost:80
+
+```bash
+curl http://localhost:80/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}'
+```
+
 Expected output:
 
 ```json
 {
   "text": [
-    "What is AMD Instinct? AMD Instinct is a line of high-performance computing (HPC) and artificial intelligence (AI) accelerators designed for datacenter and cloud computing applications. It is based on AMDs Radeon Instinct architecture, which is optimized for HPC and AI workloads. AMD Instinct accelerators are designed to provide high-performance computing and AI acceleration for a wide range of applications, including scientific simulations, data analytics, machine learning, and deep learning.nAMD Instinct accelerators are based on AMDs Radeon Instinct architecture, which is designed to provide high-performance computing and AI acceleration. They are built on a 7nm process node and feature a high-performance GPU core, as well as a large amount of memory and bandwidth to support high-performance computing and AI workloads.\nAMD Instinct accelerators are designed to be used in a variety of applications, including:\nScientific simulations: AMD Instinct accelerators can be used to accelerate complex scientific simulations, such as weather forecasting, fluid dynamics, and molecular dynamics.\nData analytics: AMD Instinct accelerators can be used to accelerate data analytics workloads, such as data compression, data encryption, and data mining.\nMachine learning: AMD Instinct accelerators can be used to accelerate machine learning workloads, such as neural network training and"
+    "What is AMD Instinct? AMD Instinct is a line of high-performance computing (HPC) and 
+    artificial intelligence (AI) accelerators designed for datacenter and cloud computing 
+    applications. It is based on AMDs Radeon Instinct architecture, which is optimized for HPC
+     and AI workloads. AMD Instinct accelerators are designed to provide high-performance 
+     computing and AI acceleration for a wide range of applications, including scientific simulations, 
+     data analytics, machine learning, and deep learning.
+     
+     AMD Instinct accelerators are based on AMDs Radeon Instinct architecture, which is designed 
+     to provide high-performance computing and AI acceleration. They are built on a 7nm process node 
+     and feature a high-performance GPU core, as well as a large amount of memory and bandwidth to 
+     support high-performance computing and AI workloads.
+     
+     AMD Instinct accelerators are designed to be used in a variety of applications, including:
+     Scientific simulations: AMD Instinct accelerators can be used to accelerate complex scientific 
+     simulations, such as weather forecasting, fluid dynamics, and molecular dynamics.
+     Data analytics: AMD Instinct accelerators can be used to accelerate data analytics workloads,
+     such as data compression, data encryption, and data mining.
+     Machine learning: AMD Instinct accelerators can be used to accelerate machine learning workloads"
   ]
 }
 ```
 
-## Benchmark the multi-node serving backend
+## Benchmark the multi-node inference pool
 
 Use Apache Bench to simulate 1000+ of users per minute
 
-### 1. Install Apache Bench (option 1)
+### Option 1: Install Apache Bench Locally
 
 This option requires sudo access.
 
@@ -334,25 +576,28 @@ sudo apt-get update
 sudo apt-get install apache2-utils
 ```
 
-### 2. Start Apache server container using following command (Option 2)
+### Option 2: Run Apache Bench in a Container
 
 ```bash
 docker run -it --rm \
   --shm-size=8GB \
   --ipc=host \
   --network=host \
-  --privileged --cap-add=CAP_SYS_ADMIN \
   --entrypoint bash \
   ubuntu/apache2:2.4-22.04_beta
 ```
 
-### 3. Create a file named "postdata" with prompt request
+### Create a Postdata File
+
+Create a file named `postdata` with prompt request
 
 ```json
 {"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}
 ```
 
-### 4. Simulate 1000 user requests using following command
+### Start Apache Bench
+
+Simulate 1000 user requests using following command
 
 ```bash
 ab -n 1000 -c 100 -T application/json -p postdata -H "Authorization: Bearer your_secret_master_key" http://localhost:4000/v1/completions
@@ -365,73 +610,6 @@ Parameters:
 * `-T` → Content-type header to use for POST/PUT data
 * `-p` → File containing data to POST. Remember also to set -T
 * `-H` → Add authorization header with your LiteLLM API key
-
-## Prometheus and Grafana
-
-Prometheus metric logging is enabled by default in the vLLM OpenAI-compatible server.
-
-To connect vLLM metric logging to Prometheus and Grafana, follow these steps on the head node:
-
-### Install Prometheus
-
-Download Prometheus stable release binaries for desired architecture such as:
-
-```bash
-wget https://github.com/prometheus/prometheus/releases/download/v3.2.1/prometheus-3.2.1.linux-amd64.tar.gz
-```
-
-Untar downloaded file
-
-```bash
-tar -xvf prometheus-3.2.1.linux-amd64.tar.gz
-```
-
-Update prometheus.yaml file to include nodes running the inference framework:
-
-```bash
-cd prometheus-3.2.1.linux-amd64/
-vi prometheus.yaml
-```
-
-```yaml
-global:
-  scrape_interval: 15s
-
-scrape_configs:
-  - job_name: 'vllm'
-    static_configs:
-      - targets: ['useocpm2m-386-001:8000', 'useocpm2m-386-004:8000']
-```
-
-Run Prometheus on desired port:
-
-```bash
-./prometheus --web.listen-address=:9091
-```
-
-### Install Grafana
-
-Download and install Grafana:
-
-```bash
-wget https://dl.grafana.com/enterprise/release/grafana-enterprise-11.5.2.linux-amd64.tar.gz
-tar -xvf grafana-enterprise-11.5.2.linux-amd64.tar.gz
-cd grafana-v11.5.2/bin/
-./grafana server
-```
-
-### Configure Grafana Dashboard
-
-1. Navigate to http://localhost:3000. Log in with the default username (admin) and password (admin).
-
-2. Add Prometheus Data Source:
-   - Go to http://localhost:3000/connections/datasources/new 
-   - Select Prometheus
-
-3. Import Dashboard:
-   - Go to http://localhost:3000/dashboard/import
-   - Upload grafana.json from https://docs.vllm.ai/en/latest/getting_started/examples/prometheus_grafana.html
-   - Select the prometheus datasource
 
 ### Performance Examples
 
