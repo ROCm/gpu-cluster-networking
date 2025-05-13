@@ -245,6 +245,10 @@ Start the LiteLLM gateway:
 docker-compose up -d
 ```
 
+##### Monitoring LiteLLM Gateway
+
+LiteLLM includes built-in metrics that can be viewed in the Grafana dashboard. No additional configuration is needed beyond the Prometheus scrape configuration above.
+
 #### Option 2: Nginx-based Load Balancer
 
 Nginx provides a high-performance, scalable HTTP server and reverse proxy that can efficiently distribute traffic across multiple inference nodes.
@@ -334,6 +338,50 @@ Start the Nginx gateway:
 docker-compose up -d
 ```
 
+##### Monitoring Nginx Gateway
+
+To monitor Nginx, you can add the nginx-prometheus-exporter to your gateway setup:
+
+* Update the `docker-compose.yml` for Nginx to include the exporter:
+
+```yaml
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx_gateway
+    network_mode: host
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    arguments:
+      - --nginx.scrape-uri=http://localhost/stub_status
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - nginx
+```
+
+Add a status endpoint to your `nginx.conf`:
+
+```text
+# Inside the server block, add:
+location /metrics {
+    stub_status on;
+    access_log off;
+    allow 127.0.0.1;
+    deny all;
+}
+```
+
 ## Monitoring Stack Setup
 
 **On the monitoring node:**
@@ -348,9 +396,6 @@ cd ~/llm-cluster/monitoring
 Create `docker-compose.yml` for monitoring:
 
 ```yaml
-version: '3.8'
-
-
 services:
   device-metrics-exporter:
     image: rocm/device-metrics-exporter:v1.2.1
@@ -388,17 +433,34 @@ services:
       - prometheus
     restart: unless-stopped
 
+  #Prometheus exporter for local node (OS) metrics. Omit this service if it's already running on your nodes.
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    restart: unless-stopped
+    command:
+      - '--path.rootfs=/host'
+    ports:
+      - "9100:9100"
+    pid: host
+    volumes:
+      - '/:/host:ro,rslave'
+
 volumes:
   grafana_data:
 ```
 
-Create `prometheus.yml`:
+Create `prometheus/prometheus.yml`:
 
 ```yaml
 global:
   scrape_interval: 15s
 
 scrape_configs:
+  - job_name: 'node'
+    static_configs:
+    - targets: ['localhost:9100']
+
   # Inference servers
   - job_name: 'vllm'
     metrics_path: /metrics
@@ -440,7 +502,7 @@ scrape_configs:
 
 > **Note:** Replace `node0` and `node1` with the hostname or IP address of your inference nodes
 
-Create `datasources.yml`:
+Create `grafana/datasources.yml`:
 
 ```yaml
 apiVersion: 1
@@ -457,58 +519,6 @@ Start the monitoring services:
 
 ```bash
 docker-compose up -d
-```
-
-### Gateway-Specific Monitoring Setup
-
-#### For LiteLLM Gateway
-
-LiteLLM includes built-in metrics that can be viewed in the Grafana dashboard. No additional configuration is needed beyond the Prometheus scrape configuration above.
-
-#### For Nginx Gateway
-
-To monitor Nginx, you can add the nginx-prometheus-exporter to your gateway setup:
-
-* Update the `docker-compose.yml` for Nginx to include the exporter:
-
-```yaml
-services:
-  nginx:
-    image: nginx:latest
-    container_name: nginx_gateway
-    network_mode: host
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  nginx-exporter:
-    image: nginx/nginx-prometheus-exporter:latest
-    container_name: nginx_exporter
-    command:
-      - -nginx.scrape-uri=http://localhost/metrics
-      - -nginx.retries=5
-      - -web.listen-address=:9113      
-    network_mode: host
-    restart: unless-stopped
-    depends_on:
-      - nginx
-```
-
-Add a status endpoint to your `nginx.conf`:
-
-```text
-# Inside the server block, add:
-location /metrics {
-    stub_status on;
-    access_log off;
-    allow 127.0.0.1;
-    deny all;
-}
 ```
 
 ## Test the Multi-Node Serving Configuration
@@ -529,7 +539,7 @@ curl http://localhost:4000/v1/completions \
 Send one request to the Nginx endpoint at localhost:80
 
 ```bash
-curl http://localhost:80/v1/completions \
+curl http://localhost/v1/completions \
   -H "Content-Type: application/json" \
   -d '{"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}'
 ```
@@ -542,21 +552,21 @@ Expected output:
     "What is AMD Instinct? AMD Instinct is a line of high-performance computing (HPC) and 
     artificial intelligence (AI) accelerators designed for datacenter and cloud computing 
     applications. It is based on AMDs Radeon Instinct architecture, which is optimized for HPC
-     and AI workloads. AMD Instinct accelerators are designed to provide high-performance 
-     computing and AI acceleration for a wide range of applications, including scientific simulations, 
-     data analytics, machine learning, and deep learning.
+    and AI workloads. AMD Instinct accelerators are designed to provide high-performance 
+    computing and AI acceleration for a wide range of applications, including scientific simulations, 
+    data analytics, machine learning, and deep learning.
      
-     AMD Instinct accelerators are based on AMDs Radeon Instinct architecture, which is designed 
-     to provide high-performance computing and AI acceleration. They are built on a 7nm process node 
-     and feature a high-performance GPU core, as well as a large amount of memory and bandwidth to 
-     support high-performance computing and AI workloads.
+    AMD Instinct accelerators are based on AMDs Radeon Instinct architecture, which is designed 
+    to provide high-performance computing and AI acceleration. They are built on a 7nm process node 
+    and feature a high-performance GPU core, as well as a large amount of memory and bandwidth to 
+    support high-performance computing and AI workloads.
      
-     AMD Instinct accelerators are designed to be used in a variety of applications, including:
-     Scientific simulations: AMD Instinct accelerators can be used to accelerate complex scientific 
-     simulations, such as weather forecasting, fluid dynamics, and molecular dynamics.
-     Data analytics: AMD Instinct accelerators can be used to accelerate data analytics workloads,
-     such as data compression, data encryption, and data mining.
-     Machine learning: AMD Instinct accelerators can be used to accelerate machine learning workloads"
+    AMD Instinct accelerators are designed to be used in a variety of applications, including:
+    Scientific simulations: AMD Instinct accelerators can be used to accelerate complex scientific 
+    simulations, such as weather forecasting, fluid dynamics, and molecular dynamics.
+    Data analytics: AMD Instinct accelerators can be used to accelerate data analytics workloads,
+    such as data compression, data encryption, and data mining.
+    Machine learning: AMD Instinct accelerators can be used to accelerate machine learning workloads"
   ]
 }
 ```
