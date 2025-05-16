@@ -22,9 +22,11 @@ This architecture allows horizontal scaling by adding more inference nodes while
 
 ### Logical Diagram
 
-```{note}
-Placeholder for diagram image
-```
+<div align="center">
+
+[![Load balancer logical diagram](../data/lb-logical-diagram.png)](../data/lb-logical-diagram.png)
+
+</div>
 
 ## Prerequisites
 
@@ -834,13 +836,21 @@ The monitoring stack includes pre-configured Grafana dashboards for comprehensiv
 
 - **AMD Instinct Dashboard** (`Instinct_Dashboard.json`): Monitors GPU performance metrics including temperature, utilization, memory usage, and power consumption. Also available at [AMD Instinct Single Node Dashboard](https://grafana.com/grafana/dashboards/23434-amd-instinct-single-node-dashboard/).
 
-![Instinct Single Node Dashboard](../data/single-node-dashboard.png)
+<div align="center">
+
+[![Instinct Single Node Dashboard](../data/single-node-dashboard.png)](../data/single-node-dashboard.png)
+
+</div>
 
 - **vLLM Dashboard** (`vLLM_Dashboard.json`): Provides insights into vLLM server performance, including request throughput, latency metrics, and queue statistics.
 
-![vLLM Dashboard](../data/vllm-dashboard.png)
+<div align="center">
+
+[![vLLM Dashboard](../data/vllm-dashboard.png)](../data/vllm-dashboard.png)
 
 Additional recommended dashboards for comprehensive monitoring:
+
+</div>
 
 - **k6 Dashboard**: Visualizes load test results with detailed performance metrics. Available for import into Grafana with ID `14801` or at [k6 Dashboard](https://grafana.com/grafana/dashboards/14801-k6-dashboard/).
 
