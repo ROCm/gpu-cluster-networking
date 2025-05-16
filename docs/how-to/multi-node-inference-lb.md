@@ -186,7 +186,7 @@ services:
 Start the inference services:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### API Gateway Setup
@@ -266,7 +266,7 @@ For production environments, replace the default key with a strong, randomized k
 Start the LiteLLM gateway:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 Verify that all LLM endpoints are healthy:
@@ -405,7 +405,7 @@ services:
 Start the Nginx gateway:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ##### Monitoring Nginx Gateway
@@ -585,7 +585,7 @@ datasources:
 Start the monitoring services:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Testing and Performance Evaluation
