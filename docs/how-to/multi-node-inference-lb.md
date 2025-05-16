@@ -12,7 +12,7 @@ This solution implements a distributed LLM inference system with three main comp
   - An [Nginx](https://nginx.org/)-based load balancer - a production-grade reverse proxy with high performance
 - **Monitoring Layer**: Prometheus and Grafana for comprehensive metrics collection and visualization, with additional load testing tools
 
-This architecture allows horizontal scaling by adding more inference nodes while maintaining a single API endpoint for client applications. The system supports various model sizes:
+This architecture allows horizontal scaling by adding more inference nodes while maintaining a single API endpoint for client applications. This architecture supports various model sizes:
 
 - **Small Models**: Can run efficiently on a single GPU
 - **Medium Models**: Typically require 2+ GPUs with tensor parallelism
@@ -22,15 +22,13 @@ This architecture allows horizontal scaling by adding more inference nodes while
 
 ### Logical Diagram
 
-<div align="center">
-
-[![Load balancer logical diagram](../data/lb-logical-diagram.png)](../data/lb-logical-diagram.png)
-
-</div>
+<div align="center"><a href="../data/lb-logical-diagram.png" target="_blank">
+  <img src="../data/lb-logical-diagram.png" alt="Load balancer logical diagram">
+</a></div>
 
 ## Prerequisites
 
-- Multiple nodes with AMD GPUs supporting ROCm
+- Multiple ROCm-compatible nodes with AMD GPUs
 - Docker and Docker Compose installed on all nodes
 - Network connectivity between nodes
 - Models downloaded to a shared or local storage location
@@ -451,10 +449,15 @@ Create `docker-compose.yml` for the monitoring stack:
 
 ```yaml
 services:
+  # Check https://hub.docker.com/r/rocm/device-metrics-exporter/tags for the latest version
   device-metrics-exporter:
-    image: rocm/device-metrics-exporter:v1.2.1
+    image: rocm/device-metrics-exporter:v1.3.0-beta.1
     container_name: device-metrics-exporter
     restart: unless-stopped
+    group_add:
+      - video    
+    volumes:
+      - ./config.json:/etc/metrics/config.json
     devices:
       - /dev/kfd
       - /dev/dri
@@ -468,17 +471,28 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--web.listen-address=:9091'
     ports:
-      - "9091:9091"
+      - "9090:9090"
     restart: unless-stopped
+
+  influxdb:
+    image: influxdb:1.11.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin
+    volumes:
+      - ./influxdb:/var/lib/influxdb
 
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     volumes:
       - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-      - grafana_data:/var/lib/grafana
+      - ./grafana:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
     ports:
@@ -486,22 +500,6 @@ services:
     depends_on:
       - prometheus
     restart: unless-stopped
-
-  # Prometheus exporter for local node (OS) metrics. Omit this service if it's already running on your nodes.
-  node_exporter:
-    image: quay.io/prometheus/node-exporter:latest
-    container_name: node_exporter
-    restart: unless-stopped
-    command:
-      - '--path.rootfs=/host'
-    ports:
-      - "9100:9100"
-    pid: host
-    volumes:
-      - '/:/host:ro,rslave'
-
-volumes:
-  grafana_data:
 ```
 
 Create `prometheus/prometheus.yml` to configure metrics collection:
@@ -511,6 +509,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
+  # Host OS metrics
   - job_name: 'node'
     static_configs:
     - targets: ['localhost:9100']
@@ -545,7 +544,9 @@ scrape_configs:
           service: 'amd_gpu_metrics'        
 ```
 
-> **Note:** Replace `node0` and `node1` with the actual hostnames or IP addresses of your inference nodes
+```{note}
+Replace `node0` and `node1` with the actual hostnames or IP addresses of your inference nodes. When running Prometheus in a Docker Container, change instances of `localhost` to `host.docker.internal`. 
+```
 
 Create `grafana/datasources.yml` to configure the Prometheus data source:
 
@@ -579,9 +580,7 @@ docker compose up -d
 
 Once your multi-node inference system is deployed, you can validate its functionality and evaluate its performance.
 
-### Basic Functionality Testing
-
-#### Testing with LiteLLM Gateway
+### Testing with LiteLLM Gateway
 
 Send a test request to the LiteLLM endpoint:
 
@@ -592,7 +591,7 @@ curl http://localhost:4000/v1/completions \
   -d '{"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}'
 ```
 
-#### Testing with Nginx Gateway
+### Testing with Nginx Gateway
 
 Send a test request to the Nginx endpoint:
 
@@ -694,7 +693,7 @@ ab -n 20000 -c 2000 -T application/json -p postdata http://localhost:80/v1/compl
 
 ### Advanced Load Testing with k6
 
-For more sophisticated load testing scenarios, Grafana k6 offers enhanced capabilities including detailed metrics collection and realistic user simulation.
+For more sophisticated load testing scenarios, Grafana k6 offers enhanced capabilities including detailed metrics collection and realistic user simulation. The test scripts used in this section are available to download from [https://github.com/ROCm/gpu-cluster-networking/examples/llm-cluster/monitoring/scripts](https://github.com/ROCm/gpu-cluster-networking/examples/llm-cluster/monitoring/scripts)
 
 #### Installing k6
 
@@ -841,25 +840,21 @@ The monitoring stack includes pre-configured Grafana dashboards for comprehensiv
 
 **AMD Instinct Dashboard** (`Instinct_Dashboard.json`): Monitors GPU performance metrics including temperature, utilization, memory usage, and power consumption. Also available at [AMD Instinct Single Node Dashboard](https://grafana.com/grafana/dashboards/23434-amd-instinct-single-node-dashboard/).
 
-<div align="center">
-
-[![Instinct Single Node Dashboard](../data/single-node-dashboard.png)](../data/single-node-dashboard.png)
-
-</div>
+<div align="center"><a href="../data/single-node-dashboard.png" target="_blank">
+  <img src="../data/single-node-dashboard.png" alt="Instinct Single Node Dashboard">
+</a></div>
 
 **vLLM Dashboard** (`vLLM_Dashboard.json`): Provides insights into vLLM server performance, including request throughput, latency metrics, and queue statistics.
 
-<div align="center">
-
-[![vLLM Dashboard](../data/vllm-dashboard.png)](../data/vllm-dashboard.png)
-
-</div>
+<div align="center"><a href="../data/vllm-dashboard.png" target="_blank">
+  <img src="../data/vllm-dashboard.png" alt="vLLM Dashboard">
+</a></div>
 
 Additional recommended dashboards for comprehensive monitoring:
 
-- **k6 Dashboard**: Visualizes load test results with detailed performance metrics. Available for import into Grafana with ID `14801` or at [k6 Dashboard](https://grafana.com/grafana/dashboards/14801-k6-dashboard/))](https://grafana.com/grafana/dashboards/14801-k6-dashboard/).
+- **k6 Dashboard**: Visualizes load test results with detailed performance metrics. Available for import into Grafana with ID `14801` or at [https://grafana.com/grafana/dashboards/14801-k6-dashboard/](https://grafana.com/grafana/dashboards/14801-k6-dashboard/).
 
-- **vLLM Reference Dashboard**: Official dashboard from the vLLM project for detailed inference metrics. Available at [vLLM GitHub Repository](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json)](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json).
+- **vLLM Reference Dashboard**: Official dashboard from the vLLM project for detailed inference metrics. Available at [https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json).
 
 - **NGINX Dashboard**: Official dashboard for the NGINX Prometheus exporter. [https://grafana.com/grafana/dashboards/12767-nginx/](https://grafana.com/grafana/dashboards/12767-nginx/)
 

@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  # Inference servers
+  # Host OS metrics
   - job_name: node
     static_configs:
     - targets: ['host.docker.internal:9100'] 
