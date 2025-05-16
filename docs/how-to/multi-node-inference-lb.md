@@ -655,7 +655,7 @@ docker run -it --rm \
 
 #### Running Apache Bench Tests
 
-- Create a request payload file:
+Create a request payload file:
 
 ```bash
 cat > postdata << EOF
@@ -663,7 +663,7 @@ cat > postdata << EOF
 EOF
 ```
 
-2. Run the benchmark with desired concurrency and request count:
+Run the benchmark with desired concurrency and request count:
 
 ```bash
 ab -n 1000 -c 100 -T application/json -p postdata -H "Authorization: Bearer sk-1234" http://localhost:4000/v1/completions
@@ -875,20 +875,20 @@ To identify the optimal setup for your specific use case, systematically test di
 
 #### Load Balancer Options
   
-  - **LiteLLM**: Generally provides better handling of LLM-specific requirements like streaming responses and specialized routing
-  - **Nginx**: Often delivers higher raw throughput for simple completion requests and offers more configuration flexibility
+- **LiteLLM**: Generally provides better handling of LLM-specific requirements like streaming responses and specialized routing
+- **Nginx**: Often delivers higher raw throughput for simple completion requests and offers more configuration flexibility
 
 #### Inference Servers
 
- - **vLLM**: [https://docs.vllm.ai/](https://docs.vllm.ai/)
- - **SGLang**: [https://docs.sglang.ai/](https://docs.sglang.ai/)
- - **TGI**: [https://huggingface.co/docs/text-generation-inference/index](https://huggingface.co/docs/text-generation-inference/index)
+- **vLLM**: [https://docs.vllm.ai/](https://docs.vllm.ai/)
+- **SGLang**: [https://docs.sglang.ai/](https://docs.sglang.ai/)
+- **TGI**: [https://huggingface.co/docs/text-generation-inference/index](https://huggingface.co/docs/text-generation-inference/index)
 
 #### Inference Configuration
 
- - Test different tensor parallel sizes to find the optimal balance between throughput and latency
- - Experiment with batch sizes (`--max-batch-size` in vLLM) to increase throughput for concurrent requests
- - Try different quantization options to improve memory efficiency
+- Test different tensor parallel sizes to find the optimal balance between throughput and latency
+- Experiment with batch sizes (`--max-batch-size` in vLLM) to increase throughput for concurrent requests
+- Try different quantization options to improve memory efficiency
 
 ### Using Historical Performance Data
 
@@ -896,8 +896,8 @@ The monitoring setup in this guide stores historical performance data, enabling 
 
 #### Establish Performance Baselines
 
- - Run benchmark tests after initial setup to establish baseline performance metrics
- - Document key metrics like tokens per second, request latency, and GPU utilization
+- Run benchmark tests after initial setup to establish baseline performance metrics
+- Document key metrics like tokens per second, request latency, and GPU utilization
 
 #### Track Performance Trends
 
@@ -910,13 +910,13 @@ Beyond the application components themselves, consider these system-level optimi
 
 #### Network Configuration
 
- - Ensure nodes have sufficient network bandwidth for model weight synchronization
- - Consider using dedicated network interfaces for inter-node communication
+- Ensure nodes have sufficient network bandwidth for model weight synchronization
+- Consider using dedicated network interfaces for inter-node communication
 
 #### Host OS Tuning
 
- - Adjust kernel parameters related to networking and memory management
- - The NUMA configuration mentioned earlier in this guide is just one example
+- Adjust kernel parameters related to networking and memory management
+- The NUMA configuration mentioned earlier in this guide is just one example
 
 You can find more information on system optimization at these links:
 
@@ -931,13 +931,13 @@ When scaling your cluster, consider both performance and resource utilization:
 
 #### Right-sizing
 
- - Use Grafana dashboards to identify under-utilized resources
- - Scale the number of nodes based on actual usage patterns and SLAs
+- Use Grafana dashboards to identify under-utilized resources
+- Scale the number of nodes based on actual usage patterns and SLAs
 
 #### *Workload Scheduling
 
- - Consider dedicating specific nodes to different models based on usage patterns
- - Use metrics to identify peak usage times and scale accordingly
+- Consider dedicating specific nodes to different models based on usage patterns
+- Use metrics to identify peak usage times and scale accordingly
 
 By systematically testing configurations and leveraging the monitoring data, you can continuously optimize your multi-node inference setup to achieve the best balance of performance, reliability, and resource efficiency.
 
