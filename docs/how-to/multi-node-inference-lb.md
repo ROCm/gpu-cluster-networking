@@ -22,23 +22,8 @@ This architecture allows horizontal scaling by adding more inference nodes while
 
 ### Logical Diagram
 
-```{mermaid}
-flowchart TD
-    clients["Client Applications"] --> gateway["API Gateway Layer"]
-    gateway -->node1 & node2 & nodeN
-
-    subgraph "Inference Nodes"
-        node1["Inference Node 1"]
-        node2["Inference Node 2"]
-        nodeN["Inference Node N"]
-    end
-    
-    classDef main fill:#f9f9f9,stroke:#333,stroke-width:2px
-    classDef gateway fill:#9cf,stroke:#333
-    classDef nodes fill:#f96,stroke:#333
-    
-    class clients,gateway,inference main
-    class node1,node2,nodeN nodes
+```{note}
+Placeholder for diagram image
 ```
 
 ## Prerequisites
