@@ -6,17 +6,17 @@ This guide describes how to set up a scalable, high-performance multi-node LLM i
 
 This solution implements a distributed LLM inference system with three main components:
 
-* **Inference Pool**: Multiple inference nodes running vLLM or SGLang servers on AMD GPUs using tensor parallelism
-* **API Gateway Layer**: A unified entry point that distributes requests across the inference pool. This guide demonstrates two options:
-  * A [LiteLLM](https://docs.litellm.ai/docs/)-based load balancer - optimized for LLM workloads with built-in observability
-  * An [Nginx](https://nginx.org/)-based load balancer - a production-grade reverse proxy with high performance
-* **Monitoring Layer**: Prometheus and Grafana for comprehensive metrics collection and visualization, with additional load testing tools
+- **Inference Pool**: Multiple inference nodes running vLLM or SGLang servers on AMD GPUs using tensor parallelism
+- **API Gateway Layer**: A unified entry point that distributes requests across the inference pool. This guide demonstrates two options:
+  - A [LiteLLM](https://docs.litellm.ai/docs/)-based load balancer - optimized for LLM workloads with built-in observability
+  - An [Nginx](https://nginx.org/)-based load balancer - a production-grade reverse proxy with high performance
+- **Monitoring Layer**: Prometheus and Grafana for comprehensive metrics collection and visualization, with additional load testing tools
 
 This architecture allows horizontal scaling by adding more inference nodes while maintaining a single API endpoint for client applications. The system supports various model sizes:
 
-* **Small Models**: Can run efficiently on a single GPU
-* **Medium Models**: Typically require 2+ GPUs with tensor parallelism
-* **Large Models**: Requires multi-node deployments for high availability and performance
+- **Small Models**: Can run efficiently on a single GPU
+- **Medium Models**: Typically require 2+ GPUs with tensor parallelism
+- **Large Models**: Requires multi-node deployments for high availability and performance
 
 **Tensor Parallelism** distributes model layers across multiple GPUs, allowing inference of models too large to fit in a single GPU's memory. The `--tensor-parallel-size` (`-tp`) parameter determines how many GPUs will share the model weights.
 
@@ -30,10 +30,10 @@ This architecture allows horizontal scaling by adding more inference nodes while
 
 ## Prerequisites
 
-* Multiple nodes with AMD GPUs supporting ROCm
-* Docker and Docker Compose installed on all nodes
-* Network connectivity between nodes
-* Models downloaded to a shared or local storage location
+- Multiple nodes with AMD GPUs supporting ROCm
+- Docker and Docker Compose installed on all nodes
+- Network connectivity between nodes
+- Models downloaded to a shared or local storage location
 
 ### NUMA Configuration
 
@@ -297,12 +297,12 @@ Expected output should show all healthy endpoints:
 
 LiteLLM provides several monitoring and observability options:
 
-* **Basic Logging**: Available in the open source version, provides request/response logging and basic metrics
-* **Callback Integrations**: LiteLLM supports custom callbacks for advanced monitoring with tools like:
-  * [LangFuse](https://docs.litellm.ai/docs/observability/langfuse_integration)
-  * [Helicone](https://docs.litellm.ai/docs/observability/helicone_integration)
-  * [LangSmith](https://docs.litellm.ai/docs/observability/langsmith_integration)
-  * Custom callback handlers
+- **Basic Logging**: Available in the open source version, provides request/response logging and basic metrics
+- **Callback Integrations**: LiteLLM supports custom callbacks for advanced monitoring with tools like:
+  - [LangFuse](https://docs.litellm.ai/docs/observability/langfuse_integration)
+  - [Helicone](https://docs.litellm.ai/docs/observability/helicone_integration)
+  - [LangSmith](https://docs.litellm.ai/docs/observability/langsmith_integration)
+  - Custom callback handlers
 
 For this guide, we're using the open source version with our Prometheus/Grafana stack for system-level monitoring. If you need LLM-specific tracing and observability, consider exploring the callback integrations.
 
@@ -312,7 +312,7 @@ Nginx provides a high-performance, scalable HTTP server and reverse proxy that c
 
 Create `nginx.conf` with the following configuration:
 
-```nginx
+```text
 worker_processes auto;
 worker_rlimit_nofile 65535;
 events {
@@ -736,22 +736,26 @@ source .env
 
 The repository includes several specialized test scripts for different testing scenarios:
 
-**Chat Completions Test**:
+##### Chat Completions Test
+
 ```bash
 k6 run --out influxdb=http://localhost:8086/k6 chat-completions-test.js
 ```
 
-**Ramp-up Test**:
+##### Ramp-up Test
+
 ```bash
 k6 run --out influxdb=http://localhost:8086/k6 ramp-up-test.js
 ```
 
-**Stress Test**:
+##### Stress Test
+
 ```bash
 k6 run --out influxdb=http://localhost:8086/k6 stress-test.js
 ```
 
-**Prompt Length Test**:
+##### Prompt Length Test
+
 ```bash
 k6 run --out influxdb=http://localhost:8086/k6 prompt-length-test.js
 ```
@@ -834,7 +838,7 @@ The k6 dashboard provides detailed metrics about request rates, response times, 
 
 The monitoring stack includes pre-configured Grafana dashboards for comprehensive system visibility. These dashboards are provided in the repository's `examples/llm-cluster/monitoring/grafana` directory:
 
-- **AMD Instinct Dashboard** (`Instinct_Dashboard.json`): Monitors GPU performance metrics including temperature, utilization, memory usage, and power consumption. Also available at [AMD Instinct Single Node Dashboard](https://grafana.com/grafana/dashboards/23434-amd-instinct-single-node-dashboard/).
+**AMD Instinct Dashboard** (`Instinct_Dashboard.json`): Monitors GPU performance metrics including temperature, utilization, memory usage, and power consumption. Also available at [AMD Instinct Single Node Dashboard](https://grafana.com/grafana/dashboards/23434-amd-instinct-single-node-dashboard/).
 
 <div align="center">
 
@@ -842,7 +846,7 @@ The monitoring stack includes pre-configured Grafana dashboards for comprehensiv
 
 </div>
 
-- **vLLM Dashboard** (`vLLM_Dashboard.json`): Provides insights into vLLM server performance, including request throughput, latency metrics, and queue statistics.
+**vLLM Dashboard** (`vLLM_Dashboard.json`): Provides insights into vLLM server performance, including request throughput, latency metrics, and queue statistics.
 
 <div align="center">
 
@@ -852,11 +856,11 @@ Additional recommended dashboards for comprehensive monitoring:
 
 </div>
 
-- **k6 Dashboard**: Visualizes load test results with detailed performance metrics. Available for import into Grafana with ID `14801` or at [k6 Dashboard](https://grafana.com/grafana/dashboards/14801-k6-dashboard/).
+* **k6 Dashboard**: Visualizes load test results with detailed performance metrics. Available for import into Grafana with ID `14801` or at [k6 Dashboard](https://grafana.com/grafana/dashboards/14801-k6-dashboard/).
 
-- **vLLM Reference Dashboard**: Official dashboard from the vLLM project for detailed inference metrics. Available at [vLLM GitHub Repository](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json).
+* **vLLM Reference Dashboard**: Official dashboard from the vLLM project for detailed inference metrics. Available at [vLLM GitHub Repository](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json).
 
-- **NGINX Dashboard**: Official dashboard for the NGINX Prometheus exporter. [https://grafana.com/grafana/dashboards/12767-nginx/](https://grafana.com/grafana/dashboards/12767-nginx/)
+* **NGINX Dashboard**: Official dashboard for the NGINX Prometheus exporter. [https://grafana.com/grafana/dashboards/12767-nginx/](https://grafana.com/grafana/dashboards/12767-nginx/)
 
 For importing dashboards into your Grafana instance, follow the official [Grafana Dashboard Import Guide](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/import-dashboards/).
 
@@ -869,37 +873,29 @@ Achieving optimal performance for your multi-node inference deployment requires 
 To identify the optimal setup for your specific use case, systematically test different configurations:
 
 1. **Load Balancer Options**:
-   - **LiteLLM**: Generally provides better handling of LLM-specific requirements like streaming responses and specialized routing
-   - **Nginx**: Often delivers higher raw throughput for simple completion requests and offers more configuration flexibility
+  * **LiteLLM**: Generally provides better handling of LLM-specific requirements like streaming responses and specialized routing
+   * **Nginx**: Often delivers higher raw throughput for simple completion requests and offers more configuration flexibility
 
 2. **Inference Servers**:
-   - **vLLM**
-   - **SGLang**
+   * **vLLM**
+   * **SGLang**
 
 3. **Inference Configuration**:
-   - Test different tensor parallel sizes to find the optimal balance between throughput and latency
-   - Experiment with batch sizes (`--max-batch-size` in vLLM) to increase throughput for concurrent requests
-   - Try different quantization options to improve memory efficiency
+   * Test different tensor parallel sizes to find the optimal balance between throughput and latency
+   * Experiment with batch sizes (`--max-batch-size` in vLLM) to increase throughput for concurrent requests
+   * Try different quantization options to improve memory efficiency
 
 ### Using Historical Performance Data
 
 The monitoring setup in this guide stores historical performance data, enabling you to track changes over time:
 
 1. **Establish Performance Baselines**:
-   - Run benchmark tests after initial setup to establish baseline performance metrics
-   - Document key metrics like tokens per second, request latency, and GPU utilization
+   * Run benchmark tests after initial setup to establish baseline performance metrics
+   * Document key metrics like tokens per second, request latency, and GPU utilization
 
 2. **Track Performance Trends**:
-   - Set up Grafana dashboards with time series views of key metrics
-   - Create alerts for significant deviations from established baselines
-
-3. **A/B Testing**:
-   - Use PromQL and Grafana to compare performance metrics between different configurations
-   - Example query to compare response times between two load balancers:
-     ```
-     avg by(instance) (rate(http_request_duration_seconds_sum{job="gateway"}[5m]) / 
-     rate(http_request_duration_seconds_count{job="gateway"}[5m]))
-     ```
+  * Set up Grafana dashboards with time series views of key metrics
+   * Create alerts for significant deviations from established baselines
 
 ### System-Level Optimizations
 
@@ -919,22 +915,22 @@ Beyond the application components themselves, consider these system-level optimi
 
 You can find more information on system optimization at these links:
 
-- System Optimization Guides: (https://rocm.docs.amd.com/en/latest/how-to/system-optimization/index.html)[https://rocm.docs.amd.com/en/latest/how-to/system-optimization/index.html]
-- Performance Guides: (https://rocm.docs.amd.com/en/latest/how-to/gpu-performance/mi300x.html)[https://rocm.docs.amd.com/en/latest/how-to/gpu-performance/mi300x.html]
-- Instinct Single Node Networking: (https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/single-node-config.html)[https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/single-node-config.html]
-- Instinct Multi-Node Networking: (https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/multi-node-config.html)[https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/multi-node-config.html]
+- System Optimization Guides: [https://rocm.docs.amd.com/en/latest/how-to/system-optimization/index.html](https://rocm.docs.amd.com/en/latest/how-to/system-optimization/index.html)
+- Performance Guides: [https://rocm.docs.amd.com/en/latest/how-to/gpu-performance/mi300x.html](https://rocm.docs.amd.com/en/latest/how-to/gpu-performance/mi300x.html)
+- Instinct Single Node Networking: [https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/single-node-config.html](https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/single-node-config.html)
+- Instinct Multi-Node Networking: [https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/multi-node-config.html](https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/multi-node-config.html)
 
 ### Cost-Performance Balance
 
 When scaling your cluster, consider both performance and resource utilization:
 
 1. **Right-sizing**:
-   - Use Grafana dashboards to identify under-utilized resources
-   - Scale the number of nodes based on actual usage patterns and SLAs
+   * Use Grafana dashboards to identify under-utilized resources
+   * Scale the number of nodes based on actual usage patterns and SLAs
 
 2. **Workload Scheduling**:
-   - Consider dedicating specific nodes to different models based on usage patterns
-   - Use metrics to identify peak usage times and scale accordingly
+   * Consider dedicating specific nodes to different models based on usage patterns
+   * Use metrics to identify peak usage times and scale accordingly
 
 By systematically testing configurations and leveraging the monitoring data, you can continuously optimize your multi-node inference setup to achieve the best balance of performance, reliability, and resource efficiency.
 
@@ -945,9 +941,10 @@ All configuration files, scripts, and dashboards referenced in this guide are av
 [https://github.com/ROCm/gpu-cluster-networking/examples/llm-cluster](https://github.com/ROCm/gpu-cluster-networking/examples/llm-cluster)
 
 The repository includes:
-- Docker Compose files for inference nodes (vLLM and SGLang examples)
-- API Gateway configurations (LiteLLM and Nginx examples)
-- Monitoring stack setup with Prometheus, Grafana, and InfluxDB
-- Grafana dashboards for AMD Instinct GPUs and vLLM
-- Benchmark scripts for Apache Bench and k6
-- Example configuration files and setup scripts
+
+* Docker Compose files for inference nodes (vLLM and SGLang examples)
+* API Gateway configurations (LiteLLM and Nginx examples)
+* Monitoring stack setup with Prometheus, Grafana, and InfluxDB
+* Grafana dashboards for AMD Instinct GPUs and vLLM
+* Benchmark scripts for Apache Bench and k6
+* Example configuration files and setup scripts
