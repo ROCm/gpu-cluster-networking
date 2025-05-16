@@ -253,7 +253,7 @@ deploying (InfiniBand or RoCE).
 
      sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s ADVANCED_PCI_SETTINGS=1
 
-     sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s MAX_ACC_OUT_READ=44
+     sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s MAX_ACC_OUT_READ=128
 
      sudo mlxconfig -d /dev/mst/mt4123_pciconf0 s PCI_WR_ORDERING=1
 
