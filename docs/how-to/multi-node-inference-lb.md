@@ -635,14 +635,14 @@ Apache Bench (ab) is a lightweight tool for benchmarking HTTP servers, ideal for
 
 #### Installation Options
 
-**Option 1: Install Apache Bench Locally**
+- Option 1: Install Apache Bench Locally
 
 ```bash
 sudo apt-get update
 sudo apt-get install apache2-utils
 ```
 
-**Option 2: Run Apache Bench in a Container**
+- Option 2: Run Apache Bench in a Container
 
 ```bash
 docker run -it --rm \
@@ -655,7 +655,7 @@ docker run -it --rm \
 
 #### Running Apache Bench Tests
 
-1. Create a request payload file:
+- Create a request payload file:
 
 ```bash
 cat > postdata << EOF
@@ -670,11 +670,12 @@ ab -n 1000 -c 100 -T application/json -p postdata -H "Authorization: Bearer sk-1
 ```
 
 Key parameters:
-* `-n 1000`: Total number of requests to perform
-* `-c 100`: Number of concurrent requests
-* `-T application/json`: Content-type header for POST data
-* `-p postdata`: File containing data to POST
-* `-H`: Additional header for authentication
+
+- `-n 1000`: Total number of requests to perform
+- `-c 100`: Number of concurrent requests
+- `-T application/json`: Content-type header for POST data
+- `-p postdata`: File containing data to POST
+- `-H`: Additional header for authentication
 
 #### Sample Performance Test Commands
 
@@ -697,7 +698,7 @@ For more sophisticated load testing scenarios, Grafana k6 offers enhanced capabi
 
 #### Installing k6
 
-**Option 1: Install k6 Locally**
+- Option 1: Install k6 Locally
 
 ```bash
 apt install -y k6
@@ -705,7 +706,7 @@ apt install -y k6
 
 For additional installation options, refer to the [official k6 installation guide](https://grafana.com/docs/k6/latest/set-up/install-k6/).
 
-**Option 2: Run k6 in a Container**
+- Option 2: Run k6 in a Container
 
 ```bash
 docker run --rm -i \
@@ -856,11 +857,11 @@ Additional recommended dashboards for comprehensive monitoring:
 
 </div>
 
-* **k6 Dashboard**: Visualizes load test results with detailed performance metrics. Available for import into Grafana with ID `14801` or at [k6 Dashboard](https://grafana.com/grafana/dashboards/14801-k6-dashboard/).
+- **k6 Dashboard**: Visualizes load test results with detailed performance metrics. Available for import into Grafana with ID `14801` or at [k6 Dashboard](https://grafana.com/grafana/dashboards/14801-k6-dashboard/).
 
-* **vLLM Reference Dashboard**: Official dashboard from the vLLM project for detailed inference metrics. Available at [vLLM GitHub Repository](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json).
+- **vLLM Reference Dashboard**: Official dashboard from the vLLM project for detailed inference metrics. Available at [vLLM GitHub Repository](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json).
 
-* **NGINX Dashboard**: Official dashboard for the NGINX Prometheus exporter. [https://grafana.com/grafana/dashboards/12767-nginx/](https://grafana.com/grafana/dashboards/12767-nginx/)
+- **NGINX Dashboard**: Official dashboard for the NGINX Prometheus exporter. [https://grafana.com/grafana/dashboards/12767-nginx/](https://grafana.com/grafana/dashboards/12767-nginx/)
 
 For importing dashboards into your Grafana instance, follow the official [Grafana Dashboard Import Guide](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/import-dashboards/).
 
@@ -872,46 +873,50 @@ Achieving optimal performance for your multi-node inference deployment requires 
 
 To identify the optimal setup for your specific use case, systematically test different configurations:
 
-1. **Load Balancer Options**:
-  * **LiteLLM**: Generally provides better handling of LLM-specific requirements like streaming responses and specialized routing
-   * **Nginx**: Often delivers higher raw throughput for simple completion requests and offers more configuration flexibility
+#### Load Balancer Options
+  
+  - **LiteLLM**: Generally provides better handling of LLM-specific requirements like streaming responses and specialized routing
+  - **Nginx**: Often delivers higher raw throughput for simple completion requests and offers more configuration flexibility
 
-2. **Inference Servers**:
-   * **vLLM**
-   * **SGLang**
+#### Inference Servers
 
-3. **Inference Configuration**:
-   * Test different tensor parallel sizes to find the optimal balance between throughput and latency
-   * Experiment with batch sizes (`--max-batch-size` in vLLM) to increase throughput for concurrent requests
-   * Try different quantization options to improve memory efficiency
+ - **vLLM**: [https://docs.vllm.ai/](https://docs.vllm.ai/)
+ - **SGLang**: [https://docs.sglang.ai/](https://docs.sglang.ai/)
+ - **TGI**: [https://huggingface.co/docs/text-generation-inference/index](https://huggingface.co/docs/text-generation-inference/index)
+
+#### Inference Configuration
+
+ - Test different tensor parallel sizes to find the optimal balance between throughput and latency
+ - Experiment with batch sizes (`--max-batch-size` in vLLM) to increase throughput for concurrent requests
+ - Try different quantization options to improve memory efficiency
 
 ### Using Historical Performance Data
 
 The monitoring setup in this guide stores historical performance data, enabling you to track changes over time:
 
-1. **Establish Performance Baselines**:
-   * Run benchmark tests after initial setup to establish baseline performance metrics
-   * Document key metrics like tokens per second, request latency, and GPU utilization
+#### Establish Performance Baselines
 
-2. **Track Performance Trends**:
-  * Set up Grafana dashboards with time series views of key metrics
-   * Create alerts for significant deviations from established baselines
+ - Run benchmark tests after initial setup to establish baseline performance metrics
+ - Document key metrics like tokens per second, request latency, and GPU utilization
+
+#### Track Performance Trends
+
+- Set up Grafana dashboards with time series views of key metrics
+- Create alerts for significant deviations from established baselines
 
 ### System-Level Optimizations
 
 Beyond the application components themselves, consider these system-level optimizations:
 
-1. **Network Configuration**:
-   - Ensure nodes have sufficient network bandwidth for model weight synchronization
-   - Consider using dedicated network interfaces for inter-node communication
+#### Network Configuration
 
-2. **GPU Settings**:
-   - Test different ROCm environment variables (like those used in the SGLang example)
-   - Monitor thermal performance to ensure GPUs aren't throttling under load
+ - Ensure nodes have sufficient network bandwidth for model weight synchronization
+ - Consider using dedicated network interfaces for inter-node communication
 
-3. **Host OS Tuning**:
-   - Adjust kernel parameters related to networking and memory management
-   - The NUMA configuration mentioned earlier in this guide is just one example
+#### Host OS Tuning
+
+ - Adjust kernel parameters related to networking and memory management
+ - The NUMA configuration mentioned earlier in this guide is just one example
 
 You can find more information on system optimization at these links:
 
@@ -924,13 +929,15 @@ You can find more information on system optimization at these links:
 
 When scaling your cluster, consider both performance and resource utilization:
 
-1. **Right-sizing**:
-   * Use Grafana dashboards to identify under-utilized resources
-   * Scale the number of nodes based on actual usage patterns and SLAs
+#### Right-sizing
 
-2. **Workload Scheduling**:
-   * Consider dedicating specific nodes to different models based on usage patterns
-   * Use metrics to identify peak usage times and scale accordingly
+ - Use Grafana dashboards to identify under-utilized resources
+ - Scale the number of nodes based on actual usage patterns and SLAs
+
+#### *Workload Scheduling
+
+ - Consider dedicating specific nodes to different models based on usage patterns
+ - Use metrics to identify peak usage times and scale accordingly
 
 By systematically testing configurations and leveraging the monitoring data, you can continuously optimize your multi-node inference setup to achieve the best balance of performance, reliability, and resource efficiency.
 
@@ -942,9 +949,9 @@ All configuration files, scripts, and dashboards referenced in this guide are av
 
 The repository includes:
 
-* Docker Compose files for inference nodes (vLLM and SGLang examples)
-* API Gateway configurations (LiteLLM and Nginx examples)
-* Monitoring stack setup with Prometheus, Grafana, and InfluxDB
-* Grafana dashboards for AMD Instinct GPUs and vLLM
-* Benchmark scripts for Apache Bench and k6
-* Example configuration files and setup scripts
+- Docker Compose files for inference nodes (vLLM and SGLang examples)
+- API Gateway configurations (LiteLLM and Nginx examples)
+- Monitoring stack setup with Prometheus, Grafana, and InfluxDB
+- Grafana dashboards for AMD Instinct GPUs and vLLM
+- Benchmark scripts for Apache Bench and k6
+- Example configuration files and setup scripts
