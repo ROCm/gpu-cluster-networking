@@ -1,22 +1,22 @@
 # Multi-Node Inference Load Balancing
 
-This guide describes how to set up a scalable multi-node LLM inference cluster.
+This guide describes how to set up a scalable, high-performance multi-node LLM inference cluster using AMD GPUs, supporting efficient horizontal scaling and highly available deployments.
 
 ## Architecture Overview
 
 This solution implements a distributed LLM inference system with three main components:
 
 * **Inference Pool**: Multiple inference nodes running vLLM or SGLang servers on AMD GPUs using tensor parallelism
-* **API Gateway Layer**: Choose the load balancer solution that supports your operational requirements. This guide demonstrates these options:
-  * A [LiteLLM](https://docs.litellm.ai/docs/)-based load balancer
-  * An [nginx](https://nginx.org/)-based load balancer
-* **Monitoring Layer**: Prometheus and Grafana for metrics collection and visualization
+* **API Gateway Layer**: A unified entry point that distributes requests across the inference pool. This guide demonstrates two options:
+  * A [LiteLLM](https://docs.litellm.ai/docs/)-based load balancer - optimized for LLM workloads with built-in observability
+  * An [Nginx](https://nginx.org/)-based load balancer - a production-grade reverse proxy with high performance
+* **Monitoring Layer**: Prometheus and Grafana for comprehensive metrics collection and visualization, with additional load testing tools
 
 This architecture allows horizontal scaling by adding more inference nodes while maintaining a single API endpoint for client applications. The system supports various model sizes:
 
 * **Small Models**: Can run efficiently on a single GPU
 * **Medium Models**: Typically require 2+ GPUs with tensor parallelism
-* **Large Models**: Requires multi-node deployments for high availability
+* **Large Models**: Requires multi-node deployments for high availability and performance
 
 **Tensor Parallelism** distributes model layers across multiple GPUs, allowing inference of models too large to fit in a single GPU's memory. The `--tensor-parallel-size` (`-tp`) parameter determines how many GPUs will share the model weights.
 
@@ -62,25 +62,37 @@ cat /proc/sys/kernel/numa_balancing
 
 ## Deployment
 
-This section describes the steps needed to deploy the required components for multi-node inference load balancing.
+This section provides step-by-step instructions for deploying  components for multi-node inference load balancing.
 
 ### Project Structure
 
 ```text
 /llm-cluster/
-├── nodes/                # Inference node files
+├── nodes/                 # Inference node files
 │   ├── docker-compose.yml
-│   └── .env               # GPU and model configurations
 ├── gateway/               # API Gateway/Load Balancer files
+│   ├── litellm
+│   │   ├── config.yaml
+│   │   └── docker-compose.yml
+│   └── nginx
+│       ├── docker-compose.yml
+│       └── nginx.conf         
+├── monitoring/            # Monitoring stack files
 │   ├── docker-compose.yml
-│   ├── config.yaml       
-│   └── .env              # API keys and settings
-└── monitoring/           # Monitoring stack files
-    ├── docker-compose.yml
-    ├── prometheus/
-    │   └── prometheus.yml
-    └── grafana/
-        └── datasources.yml
+│   ├── grafana/
+│   │   ├── datasources.yml
+│   │   ├── Instinct_Dashboard.json
+│   │   └── vLLM_Dashboard.json
+│   ├── influxdb/
+│   ├── prometheus/
+│   │   └── prometheus.yml
+│   └── scripts/
+│       ├── chat-completions-test.js
+│       ├── helpers/
+│       │   └── openaiGeneric.js
+│       ├── prompt-length-test.js
+│       ├── ramp-up-test.js
+│       └── stress-test.js
 ```
 
 ### Inference Pool Setup
@@ -94,7 +106,21 @@ mkdir -p ~/llm-cluster/nodes
 cd ~/llm-cluster/nodes
 ```
 
-Create a `docker-compose.yml` file for the inference nodes:
+Create a `.env` file in the `nodes/` folder with appropriate configuration for your environment:
+
+```bash
+NODE_ID=node1               # Unique identifier for this node
+MODEL_PATH=/path/to/models  # Path to local or shared model storage
+MODEL_NAME=Llama-3.1-8B-Instruct  # Model to deploy
+TP_SIZE=4                   # Tensor parallelism degree (number of GPUs to use)
+GPU_DEVICES=0,1,2,3         # GPU devices to use
+PORT=8000                   # Port to expose the inference API
+SHM_SIZE=32GB               # Shared memory size for container
+```
+
+Next, create a `docker-compose.yml` file for the inference nodes. Two options are provided below for different inference backends.
+
+#### vLLM Example
 
 ```yaml
 services:
@@ -121,7 +147,12 @@ services:
       --tensor-parallel-size ${TP_SIZE:-4}
       --port ${PORT:-8000}
     restart: unless-stopped
+```
 
+#### SGLang Example
+
+```yaml
+services:
   sglang:
     image: lmsysorg/sglang:v0.4.6.post2-rocm630
     container_name: sglang_${NODE_ID:-node1}
@@ -152,18 +183,6 @@ services:
     restart: unless-stopped
 ```
 
-Create `.env`:
-
-```bash
-NODE_ID=node1
-MODEL_PATH=/path/to/models
-MODEL_NAME=Llama-3.1-8B-Instruct
-TP_SIZE=4
-GPU_DEVICES=0,1,2,3
-PORT=8000
-SHM_SIZE=32GB
-```
-
 Start the inference services:
 
 ```bash
@@ -179,9 +198,11 @@ mkdir -p ~/llm-cluster/gateway
 cd ~/llm-cluster/gateway
 ```
 
+Choose one of the following gateway options based on your requirements.
+
 #### Option 1: LiteLLM-based Load Balancer
 
-LiteLLM provides routing, load balancing, and observability for LLM API calls, supporting multiple LLM providers and models through a unified interface.
+LiteLLM provides specialized routing, load balancing, and observability for LLM API calls, supporting multiple LLM providers and models through a unified OpenAI-compatible interface.
 
 Create `docker-compose.yml` for LiteLLM:
 
@@ -205,38 +226,41 @@ services:
         max-file: "3"
 ```
 
-Create `config.yaml`:
+Create `config.yaml` to define the model routing configuration:
 
 ```yaml
 model_list:
   - model_name: DeepSeek-R1
     litellm_params:
-      model: openai/huggingface/deepseek-ai/DeepSeek-R1
+      model: openai/deepseek-ai/DeepSeek-R1
       api_base: http://node0:8000/v1
   
   - model_name: DeepSeek-R1
     litellm_params:
-      model: openai/huggingface/deepseek-ai/DeepSeek-R1
+      model: openai/deepseek-ai/DeepSeek-R1
       api_base: http://node1:8000/v1
 
   # Add additional nodes as needed
   # - model_name: DeepSeek-R1
   #   litellm_params:
-  #     model: openai/huggingface/deepseek-ai/DeepSeek-R1
+  #     model: openai/deepseek-ai/DeepSeek-R1
   #     api_base: http://nodeN:8000/v1
 
 # Configure load balancing
 router_settings:
-  routing_strategy: least-busy
-  api_base: http://0.0.0.0:4000
-  num_retries: 3
-  timeout: 300
+  routing_strategy: least-busy  # Distributes requests to least busy nodes
+  num_retries: 3                # Number of retries if a request fails
+  timeout: 300                  # Request timeout in seconds
 ```
 
-Create `.env`:
+Create `.env` file with your API key:
 
 ```bash
-LITELLM_MASTER_KEY=your_secret_master_key
+LITELLM_MASTER_KEY=sk-1234
+```
+
+```{note}
+For production environments, replace the default key with a strong, randomized key
 ```
 
 Start the LiteLLM gateway:
@@ -245,15 +269,61 @@ Start the LiteLLM gateway:
 docker-compose up -d
 ```
 
-##### Monitoring LiteLLM Gateway
+Verify that all LLM endpoints are healthy:
 
-LiteLLM includes built-in metrics that can be viewed in the Grafana dashboard. No additional configuration is needed beyond the Prometheus scrape configuration above.
+```bash
+curl -X 'GET' \
+  'http://localhost:4000/health' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer sk-1234' | jq
+```
+
+Expected output should show all healthy endpoints:
+
+```json
+{
+  "healthy_endpoints": [
+    {
+      "model": "openai/deepseek-ai/DeepSeek-R1",
+      "api_base": "http://node0:8000/v1"
+    },
+    {
+      "model": "openai/deepseek-ai/DeepSeek-R1",
+      "api_base": "http://node1:8000/v1"
+    },
+    {
+      "model": "openai/deepseek-ai/DeepSeek-R1",
+      "api_base": "http://node2:8000/v1"
+    },
+    {
+      "model": "openai/deepseek-ai/DeepSeek-R1",
+      "api_base": "http://node3:8000/v1"
+    }
+  ],
+  "unhealthy_endpoints": [],
+  "healthy_count": 4,
+  "unhealthy_count": 0
+}
+```
+
+#### LiteLLM Monitoring Options
+
+LiteLLM provides several monitoring and observability options:
+
+* **Basic Logging**: Available in the open source version, provides request/response logging and basic metrics
+* **Callback Integrations**: LiteLLM supports custom callbacks for advanced monitoring with tools like:
+  * [LangFuse](https://docs.litellm.ai/docs/observability/langfuse_integration)
+  * [Helicone](https://docs.litellm.ai/docs/observability/helicone_integration)
+  * [LangSmith](https://docs.litellm.ai/docs/observability/langsmith_integration)
+  * Custom callback handlers
+
+For this guide, we're using the open source version with our Prometheus/Grafana stack for system-level monitoring. If you need LLM-specific tracing and observability, consider exploring the callback integrations.
 
 #### Option 2: Nginx-based Load Balancer
 
 Nginx provides a high-performance, scalable HTTP server and reverse proxy that can efficiently distribute traffic across multiple inference nodes.
 
-Create `nginx.conf`:
+Create `nginx.conf` with the following configuration:
 
 ```nginx
 worker_processes auto;
@@ -340,29 +410,19 @@ docker-compose up -d
 
 ##### Monitoring Nginx Gateway
 
-To monitor Nginx, you can add the nginx-prometheus-exporter to your gateway setup:
+To enable monitoring for your Nginx gateway, add the nginx-prometheus-exporter:
 
-* Update the `docker-compose.yml` for Nginx to include the exporter:
+Update the `docker-compose.yml` to include the exporter:
 
 ```yaml
 services:
   nginx:
-    image: nginx:latest
-    container_name: nginx_gateway
-    network_mode: host
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    # ...existing nginx configuration...
 
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:latest
     container_name: nginx_exporter
-    arguments:
+    command:
       - --nginx.scrape-uri=http://localhost/stub_status
     network_mode: host
     restart: unless-stopped
@@ -370,10 +430,9 @@ services:
       - nginx
 ```
 
-Add a status endpoint to your `nginx.conf`:
+Add a status endpoint to your `nginx.conf` inside the server block:
 
 ```text
-# Inside the server block, add:
 location /metrics {
     stub_status on;
     access_log off;
@@ -389,11 +448,19 @@ location /metrics {
 Create the monitoring directory structure:
 
 ```bash
-mkdir -p ~/llm-cluster/monitoring/{prometheus,grafana}
+mkdir -p ~/llm-cluster/monitoring/{prometheus,grafana,influxdb}
 cd ~/llm-cluster/monitoring
 ```
 
-Create `docker-compose.yml` for monitoring:
+Set appropriate permissions for Grafana and InfluxDB data directories:
+
+```bash
+# Set permissions to allow container processes to write data
+chmod 777 ~/llm-cluster/monitoring/grafana
+chmod 777 ~/llm-cluster/monitoring/influxdb
+```
+
+Create `docker-compose.yml` for the monitoring stack:
 
 ```yaml
 services:
@@ -433,7 +500,7 @@ services:
       - prometheus
     restart: unless-stopped
 
-  #Prometheus exporter for local node (OS) metrics. Omit this service if it's already running on your nodes.
+  # Prometheus exporter for local node (OS) metrics. Omit this service if it's already running on your nodes.
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node_exporter
@@ -450,7 +517,7 @@ volumes:
   grafana_data:
 ```
 
-Create `prometheus/prometheus.yml`:
+Create `prometheus/prometheus.yml` to configure metrics collection:
 
 ```yaml
 global:
@@ -469,15 +536,6 @@ scrape_configs:
       - targets: ['node0:8000', 'node1:8000'] # Add additional nodes as needed
         labels:
           service: 'vllm'
-
-  # LiteLLM Gateway metrics (if using LiteLLM)
-  - job_name: 'litellm'
-    metrics_path: /metrics
-    scrape_interval: 15s
-    static_configs:
-      - targets: ['localhost:4000']
-        labels:
-          service: 'litellm_gateway'
   
   # Nginx Gateway metrics (if using Nginx with nginx-prometheus-exporter)
   - job_name: 'nginx'
@@ -500,9 +558,9 @@ scrape_configs:
           service: 'amd_gpu_metrics'        
 ```
 
-> **Note:** Replace `node0` and `node1` with the hostname or IP address of your inference nodes
+> **Note:** Replace `node0` and `node1` with the actual hostnames or IP addresses of your inference nodes
 
-Create `grafana/datasources.yml`:
+Create `grafana/datasources.yml` to configure the Prometheus data source:
 
 ```yaml
 apiVersion: 1
@@ -513,6 +571,15 @@ datasources:
     access: proxy
     url: http://prometheus:9091
     isDefault: true
+
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    database: k6
+    user: admin
+    password: admin
+    editable: true    
 ```
 
 Start the monitoring services:
@@ -521,22 +588,26 @@ Start the monitoring services:
 docker-compose up -d
 ```
 
-## Test the Multi-Node Serving Configuration
+## Testing and Performance Evaluation
 
-### Testing with LiteLLM Gateway
+Once your multi-node inference system is deployed, you can validate its functionality and evaluate its performance.
 
-Send one request to the LiteLLM endpoint at localhost:4000
+### Basic Functionality Testing
+
+#### Testing with LiteLLM Gateway
+
+Send a test request to the LiteLLM endpoint:
 
 ```bash
 curl http://localhost:4000/v1/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer your_secret_master_key" \
+  -H "Authorization: Bearer sk-1234" \
   -d '{"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}'
 ```
 
-### Testing with Nginx Gateway
+#### Testing with Nginx Gateway
 
-Send one request to the Nginx endpoint at localhost:80
+Send a test request to the Nginx endpoint:
 
 ```bash
 curl http://localhost/v1/completions \
@@ -544,7 +615,7 @@ curl http://localhost/v1/completions \
   -d '{"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}'
 ```
 
-Expected output:
+Expected output format (content may vary):
 
 ```json
 {
@@ -571,22 +642,20 @@ Expected output:
 }
 ```
 
-## Benchmark the multi-node inference pool
+### Performance Testing with Apache Bench
 
-Use Apache Bench to simulate 1000+ of users per minute
+Apache Bench (ab) is a lightweight tool for benchmarking HTTP servers, ideal for quick performance evaluation.
 
-### Option 1: Install Apache Bench Locally
+#### Installation Options
 
-This option requires sudo access.
-
-Apache Bench is a stand-alone application and has no dependencies on the Apache web server installation.
+**Option 1: Install Apache Bench Locally**
 
 ```bash
 sudo apt-get update
 sudo apt-get install apache2-utils
 ```
 
-### Option 2: Run Apache Bench in a Container
+**Option 2: Run Apache Bench in a Container**
 
 ```bash
 docker run -it --rm \
@@ -597,41 +666,293 @@ docker run -it --rm \
   ubuntu/apache2:2.4-22.04_beta
 ```
 
-### Create a Postdata File
+#### Running Apache Bench Tests
 
-Create a file named `postdata` with prompt request
+1. Create a request payload file:
 
-```json
+```bash
+cat > postdata << EOF
 {"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}
+EOF
 ```
 
-### Start Apache Bench
-
-Simulate 1000 user requests using following command
+2. Run the benchmark with desired concurrency and request count:
 
 ```bash
-ab -n 1000 -c 100 -T application/json -p postdata -H "Authorization: Bearer your_secret_master_key" http://localhost:4000/v1/completions
+ab -n 1000 -c 100 -T application/json -p postdata -H "Authorization: Bearer sk-1234" http://localhost:4000/v1/completions
 ```
 
-Parameters:
+Key parameters:
+* `-n 1000`: Total number of requests to perform
+* `-c 100`: Number of concurrent requests
+* `-T application/json`: Content-type header for POST data
+* `-p postdata`: File containing data to POST
+* `-H`: Additional header for authentication
 
-* `-n 1000` → Number of requests to perform
-* `-c 100` → Number of multiple requests to make at a time
-* `-T` → Content-type header to use for POST/PUT data
-* `-p` → File containing data to POST. Remember also to set -T
-* `-H` → Add authorization header with your LiteLLM API key
+#### Sample Performance Test Commands
 
-### Performance Examples
-
-The following examples show inference throughput (measured in tokens per second) in Grafana when scaling from one to four nodes while routing requests through an API Gateway:
+Here are examples of commands to test different models and configurations:
 
 ```bash
-# Request command 1 (Llama-3.1-8B-Instruct)
+# Test with Llama-3.1-8B-Instruct
 ab -n 20000 -c 2000 -T application/json -p postdata http://localhost:80/v1/completions
 
-# Request command 2 (Llama-3.1-405B-Instruct)
+# Test with Llama-3.1-405B-Instruct
 ab -n 20000 -c 2000 -T application/json -p postdata http://localhost:80/v1/completions
 
-# Request command 3 (DeepSeek-R1)
+# Test with DeepSeek-R1
 ab -n 20000 -c 2000 -T application/json -p postdata http://localhost:80/v1/completions
 ```
+
+### Advanced Load Testing with k6
+
+For more sophisticated load testing scenarios, Grafana k6 offers enhanced capabilities including detailed metrics collection and realistic user simulation.
+
+#### Installing k6
+
+**Option 1: Install k6 Locally**
+
+```bash
+apt install -y k6
+```
+
+For additional installation options, refer to the [official k6 installation guide](https://grafana.com/docs/k6/latest/set-up/install-k6/).
+
+**Option 2: Run k6 in a Container**
+
+```bash
+docker run --rm -i \
+  --network=host \
+  -v ${PWD}/scripts:/scripts \
+  -e "OPENAI_URL=http://localhost:4000" \
+  -e "API_KEY=sk-1234" \
+  -e "MODEL_NAME=DeepSeek-R1" \
+  grafana/k6 run /scripts/chat-completions-test.js
+```
+
+#### Setting up k6
+
+1. Configure environment variables for the test scripts:
+
+```bash
+cd ~/llm-cluster/monitoring/scripts
+cat > .env << EOL
+export OPENAI_URL=http://localhost:4000  # Use your LiteLLM or Nginx endpoint
+export API_KEY=sk-1234                   # API key if required by your gateway
+export MODEL_NAME=DeepSeek-R1            # Your deployed model name
+EOL
+
+source .env
+```
+
+#### Running k6 Test Scripts
+
+The repository includes several specialized test scripts for different testing scenarios:
+
+**Chat Completions Test**:
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 chat-completions-test.js
+```
+
+**Ramp-up Test**:
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 ramp-up-test.js
+```
+
+**Stress Test**:
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 stress-test.js
+```
+
+**Prompt Length Test**:
+```bash
+k6 run --out influxdb=http://localhost:8086/k6 prompt-length-test.js
+```
+
+On completion, `k6` will provide a summary similar to this:
+
+```text
+$ k6 run --out influxdb=http://localhost:8086 scripts/chat-completions-test.js
+
+         /\      Grafana   /‾‾/
+    /\  /  \     |\  __   /  /
+   /  \/    \    | |/ /  /   ‾‾\
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/
+
+     execution: local
+        script: scripts/chat-completions-test.js
+        output: InfluxDBv1 (http://localhost:8086)
+
+     scenarios: (100.00%) 1 scenario, 5 max VUs, 1m30s max duration (incl. graceful stop):
+              * default: 5 looping VUs for 1m0s (gracefulStop: 30s)
+
+  █ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(95)<5000' p(95)=1.66s
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS
+
+    checks_total.......................: 170     2.64314/s
+    checks_succeeded...................: 100.00% 170 out of 170
+    checks_failed......................: 0.00%   0 out of 170
+
+    ✓ is status 200
+    ✓ has valid JSON response
+
+    CUSTOM
+    completion_tokens...................: avg=100       min=100      med=100       max=100       p(90)=100       p(95)=100
+    prompt_tokens.......................: avg=26        min=26       med=26        max=26        p(90)=26        p(95)=26
+    tokens_per_second...................: avg=83.173393 min=57.87037 med=87.565674 max=91.324201 p(90)=90.546921 p(95)=90.810037
+    total_tokens........................: avg=126       min=126      med=126       max=126       p(90)=126       p(95)=126
+
+    HTTP
+    http_req_duration...................: avg=1.21s     min=1.09s    med=1.14s     max=1.72s     p(90)=1.44s     p(95)=1.66s
+      { expected_response:true }........: avg=1.21s     min=1.09s    med=1.14s     max=1.72s     p(90)=1.44s     p(95)=1.66s
+    http_req_failed.....................: 0.00% 0 out of 85
+    http_reqs...........................: 85    1.32157/s
+
+    EXECUTION
+    iteration_duration..................: avg=3.67s     min=2.16s    med=3.62s     max=5.35s     p(90)=4.82s     p(95)=4.96s
+    iterations..........................: 85    1.32157/s
+    vus.................................: 1     min=1       max=5
+    vus_max.............................: 5     min=5       max=5
+
+    NETWORK
+    data_received........................: 87 kB 1.3 kB/s
+    data_sent............................: 31 kB 477 B/s
+
+running (1m04.3s), 0/5 VUs, 85 complete and 0 interrupted iterations
+default ✓ [======================================] 5 VUs  1m0s
+```
+
+#### Viewing k6 Test Results
+
+After running the tests, you can view the results in Grafana:
+
+1. Open Grafana at `http://<your-monitoring-node-ip>:3000`
+2. Log in with your credentials (default: admin/admin, unless changed via `GRAFANA_ADMIN_PASSWORD` environment variable)
+3. Access the k6 dashboard by importing the dashboard ID `14801` or by navigating to the pre-configured dashboard if available. The dashboard can be found at: [https://grafana.com/grafana/dashboards/14801-k6-dashboard/](https://grafana.com/grafana/dashboards/14801-k6-dashboard/)
+
+The k6 dashboard provides detailed metrics about request rates, response times, errors, and other performance indicators that help you understand your system's behavior under load.
+
+## Monitoring and Visualization
+
+### Available Dashboards
+
+The monitoring stack includes pre-configured Grafana dashboards for comprehensive system visibility. These dashboards are provided in the repository's `examples/llm-cluster/monitoring/grafana` directory:
+
+- **AMD Instinct Dashboard** (`Instinct_Dashboard.json`): Monitors GPU performance metrics including temperature, utilization, memory usage, and power consumption. Also available at [AMD Instinct Single Node Dashboard](https://grafana.com/grafana/dashboards/23434-amd-instinct-single-node-dashboard/).
+
+![Instinct Single Node Dashboard](../data/single-node-dashboard.png)
+
+- **vLLM Dashboard** (`vLLM_Dashboard.json`): Provides insights into vLLM server performance, including request throughput, latency metrics, and queue statistics.
+
+![vLLM Dashboard](../data/vllm-dashboard.png)
+
+Additional recommended dashboards for comprehensive monitoring:
+
+- **k6 Dashboard**: Visualizes load test results with detailed performance metrics. Available for import into Grafana with ID `14801` or at [k6 Dashboard](https://grafana.com/grafana/dashboards/14801-k6-dashboard/).
+
+- **vLLM Reference Dashboard**: Official dashboard from the vLLM project for detailed inference metrics. Available at [vLLM GitHub Repository](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/prometheus_grafana/grafana.json).
+
+- **NGINX Dashboard**: Official dashboard for the NGINX Prometheus exporter. [https://grafana.com/grafana/dashboards/12767-nginx/](https://grafana.com/grafana/dashboards/12767-nginx/)
+
+For importing dashboards into your Grafana instance, follow the official [Grafana Dashboard Import Guide](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/import-dashboards/).
+
+## Performance Optimization Recommendations
+
+Achieving optimal performance for your multi-node inference deployment requires experimentation and continuous monitoring. This section provides recommendations for tuning your setup based on your specific workload characteristics.
+
+### Compare Different Configurations
+
+To identify the optimal setup for your specific use case, systematically test different configurations:
+
+1. **Load Balancer Options**:
+   - **LiteLLM**: Generally provides better handling of LLM-specific requirements like streaming responses and specialized routing
+   - **Nginx**: Often delivers higher raw throughput for simple completion requests and offers more configuration flexibility
+
+2. **Inference Servers**:
+   - **vLLM**
+   - **SGLang**
+
+3. **Inference Configuration**:
+   - Test different tensor parallel sizes to find the optimal balance between throughput and latency
+   - Experiment with batch sizes (`--max-batch-size` in vLLM) to increase throughput for concurrent requests
+   - Try different quantization options to improve memory efficiency
+
+### Using Historical Performance Data
+
+The monitoring setup in this guide stores historical performance data, enabling you to track changes over time:
+
+1. **Establish Performance Baselines**:
+   - Run benchmark tests after initial setup to establish baseline performance metrics
+   - Document key metrics like tokens per second, request latency, and GPU utilization
+
+2. **Track Performance Trends**:
+   - Set up Grafana dashboards with time series views of key metrics
+   - Create alerts for significant deviations from established baselines
+
+3. **A/B Testing**:
+   - Use PromQL and Grafana to compare performance metrics between different configurations
+   - Example query to compare response times between two load balancers:
+     ```
+     avg by(instance) (rate(http_request_duration_seconds_sum{job="gateway"}[5m]) / 
+     rate(http_request_duration_seconds_count{job="gateway"}[5m]))
+     ```
+
+### System-Level Optimizations
+
+Beyond the application components themselves, consider these system-level optimizations:
+
+1. **Network Configuration**:
+   - Ensure nodes have sufficient network bandwidth for model weight synchronization
+   - Consider using dedicated network interfaces for inter-node communication
+
+2. **GPU Settings**:
+   - Test different ROCm environment variables (like those used in the SGLang example)
+   - Monitor thermal performance to ensure GPUs aren't throttling under load
+
+3. **Host OS Tuning**:
+   - Adjust kernel parameters related to networking and memory management
+   - The NUMA configuration mentioned earlier in this guide is just one example
+
+You can find more information on system optimization at these links:
+
+- System Optimization Guides: (https://rocm.docs.amd.com/en/latest/how-to/system-optimization/index.html)[https://rocm.docs.amd.com/en/latest/how-to/system-optimization/index.html]
+- Performance Guides: (https://rocm.docs.amd.com/en/latest/how-to/gpu-performance/mi300x.html)[https://rocm.docs.amd.com/en/latest/how-to/gpu-performance/mi300x.html]
+- Instinct Single Node Networking: (https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/single-node-config.html)[https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/single-node-config.html]
+- Instinct Multi-Node Networking: (https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/multi-node-config.html)[https://instinct.docs.amd.com/projects/gpu-cluster-networking/en/latest/how-to/multi-node-config.html]
+
+### Cost-Performance Balance
+
+When scaling your cluster, consider both performance and resource utilization:
+
+1. **Right-sizing**:
+   - Use Grafana dashboards to identify under-utilized resources
+   - Scale the number of nodes based on actual usage patterns and SLAs
+
+2. **Workload Scheduling**:
+   - Consider dedicating specific nodes to different models based on usage patterns
+   - Use metrics to identify peak usage times and scale accordingly
+
+By systematically testing configurations and leveraging the monitoring data, you can continuously optimize your multi-node inference setup to achieve the best balance of performance, reliability, and resource efficiency.
+
+## Repository Resources
+
+All configuration files, scripts, and dashboards referenced in this guide are available in the ROCm GPU Cluster Networking GitHub repository:
+
+[https://github.com/ROCm/gpu-cluster-networking/examples/llm-cluster](https://github.com/ROCm/gpu-cluster-networking/examples/llm-cluster)
+
+The repository includes:
+- Docker Compose files for inference nodes (vLLM and SGLang examples)
+- API Gateway configurations (LiteLLM and Nginx examples)
+- Monitoring stack setup with Prometheus, Grafana, and InfluxDB
+- Grafana dashboards for AMD Instinct GPUs and vLLM
+- Benchmark scripts for Apache Bench and k6
+- Example configuration files and setup scripts
