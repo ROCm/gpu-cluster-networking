@@ -22,9 +22,7 @@ This architecture allows horizontal scaling by adding more inference nodes while
 
 ### Logical Diagram
 
-<div align="center"><a href="../data/lb-logical-diagram.png" target="_blank">
-  <img src="../data/lb-logical-diagram.png" alt="Load balancer logical diagram">
-</a></div>
+![Load balancer logical diagram](../data/lb-logical-diagram.png)
 
 ## Prerequisites
 
@@ -840,15 +838,11 @@ The monitoring stack includes pre-configured Grafana dashboards for comprehensiv
 
 **AMD Instinct Dashboard** (`Instinct_Dashboard.json`): Monitors GPU performance metrics including temperature, utilization, memory usage, and power consumption. Also available at [AMD Instinct Single Node Dashboard](https://grafana.com/grafana/dashboards/23434-amd-instinct-single-node-dashboard/).
 
-<div align="center"><a href="../data/single-node-dashboard.png" target="_blank">
-  <img src="../data/single-node-dashboard.png" alt="Instinct Single Node Dashboard">
-</a></div>
+![Instinct Single Node Dashboard](../data/single-node-dashboard.png)
 
 **vLLM Dashboard** (`vLLM_Dashboard.json`): Provides insights into vLLM server performance, including request throughput, latency metrics, and queue statistics.
 
-<div align="center"><a href="../data/vllm-dashboard.png" target="_blank">
-  <img src="../data/vllm-dashboard.png" alt="vLLM Dashboard">
-</a></div>
+![vLLM Dashboard](../data/vllm-dashboard.png)
 
 Additional recommended dashboards for comprehensive monitoring:
 
