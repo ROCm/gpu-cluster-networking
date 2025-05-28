@@ -395,7 +395,7 @@ Nginx provides a high-performance, scalable HTTP server and reverse proxy that c
 
 To enable monitoring for your Nginx gateway, add the `nginx-prometheus-exporter`:
 
-4. Update `docker-compose.yml` to include the exporter:
+1. Update `docker-compose.yml` to include the exporter:
 
    ```yaml
    services:
@@ -413,7 +413,7 @@ To enable monitoring for your Nginx gateway, add the `nginx-prometheus-exporter`
          - nginx
    ```
 
-5. Add a status endpoint to `nginx.conf` inside the server block:
+2. Add a status endpoint to `nginx.conf` inside the server block:
 
    ```text
    location /metrics {
