@@ -89,7 +89,7 @@ Perform these actions on each inference node.
    cd ~/llm-cluster/nodes
    ```
 
-1. Create a `.env` file in the `nodes/` folder the with appropriate configuration for your environment:
+2. Create a `.env` file in the `nodes/` folder the with appropriate configuration for your environment:
 
    ```bash
    NODE_ID=node1               # Unique identifier for this node
@@ -101,7 +101,7 @@ Perform these actions on each inference node.
    SHM_SIZE=32GB               # Shared memory size for container
    ```
 
-1. Create a `docker-compose.yml` file for the inference nodes. Two options are provided below for different inference backends.
+3. Create a `docker-compose.yml` file for the inference nodes. Two options are provided below for different inference backends.
 
    **vLLM example**
 
@@ -166,7 +166,7 @@ Perform these actions on each inference node.
        restart: unless-stopped
    ```
 
-1. Start the inference services:
+4. Start the inference services:
 
    ```bash
    docker compose up -d
@@ -209,7 +209,7 @@ LiteLLM provides specialized routing, load balancing, and observability for LLM 
             max-file: "3"
     ```
 
-1. Create `config.yaml` to define the model routing configuration:
+2. Create `config.yaml` to define the model routing configuration:
 
    ```yaml
    model_list:
@@ -236,7 +236,7 @@ LiteLLM provides specialized routing, load balancing, and observability for LLM 
    timeout: 300                  # Request timeout in seconds
    ```
 
-1. Create `.env` file with your API key:
+3. Create `.env` file with your API key:
 
    ```bash
    LITELLM_MASTER_KEY=sk-1234
@@ -246,13 +246,13 @@ LiteLLM provides specialized routing, load balancing, and observability for LLM 
    For production environments, replace the default key with a strong, randomized value.
    ```
 
-1. Start the LiteLLM gateway:
+4. Start the LiteLLM gateway:
 
    ```bash
    docker compose up -d
    ```
 
-1. Verify that all LLM endpoints are healthy:
+5. Verify that all LLM endpoints are healthy:
 
    ```bash
    curl -X 'GET' \
@@ -367,7 +367,7 @@ Nginx provides a high-performance, scalable HTTP server and reverse proxy that c
    }
    ```
 
-1. Create `docker-compose.yml` for Nginx:
+2. Create `docker-compose.yml` for Nginx:
 
    ```yaml
    services:
@@ -385,7 +385,7 @@ Nginx provides a high-performance, scalable HTTP server and reverse proxy that c
          max-file: "3"
    ```
 
-1. Start the Nginx gateway:
+3. Start the Nginx gateway:
 
    ```bash
    docker compose up -d
@@ -395,7 +395,7 @@ Nginx provides a high-performance, scalable HTTP server and reverse proxy that c
 
 To enable monitoring for your Nginx gateway, add the `nginx-prometheus-exporter`:
 
-1. Update `docker-compose.yml` to include the exporter:
+4. Update `docker-compose.yml` to include the exporter:
 
    ```yaml
    services:
@@ -413,7 +413,7 @@ To enable monitoring for your Nginx gateway, add the `nginx-prometheus-exporter`
          - nginx
    ```
 
-1. Add a status endpoint to `nginx.conf` inside the server block:
+5. Add a status endpoint to `nginx.conf` inside the server block:
 
    ```text
    location /metrics {
@@ -435,7 +435,7 @@ Perform these steps on the monitoring node.
    cd ~/llm-cluster/monitoring
    ```
 
-1. Set appropriate permissions for Grafana and InfluxDB data directories:
+2. Set appropriate permissions for Grafana and InfluxDB data directories:
 
    ```bash
    # Set permissions to allow container processes to write data
@@ -443,7 +443,7 @@ Perform these steps on the monitoring node.
    chmod 777 ~/llm-cluster/monitoring/influxdb
    ```
 
-1. Create `docker-compose.yml` for the monitoring stack:
+3. Create `docker-compose.yml` for the monitoring stack:
 
    ```yaml
    services:
@@ -500,7 +500,7 @@ Perform these steps on the monitoring node.
       restart: unless-stopped
    ```
 
-1. Create `prometheus/prometheus.yml` to configure metrics collection:
+4. Create `prometheus/prometheus.yml` to configure metrics collection:
 
    ```yaml
    global:
@@ -546,7 +546,7 @@ Perform these steps on the monitoring node.
    Replace `node0` and `node1` with the actual hostnames or IP addresses of your inference nodes. When running Prometheus in a docker container, change instances of `localhost` to `host.docker.internal`. 
    ```
 
-1. Create `grafana/datasources.yml` to configure the Prometheus data source:
+5. Create `grafana/datasources.yml` to configure the Prometheus data source:
 
    ```yaml
    apiVersion: 1
@@ -568,7 +568,7 @@ Perform these steps on the monitoring node.
       editable: true    
    ```
 
-1. Start the monitoring services:
+6. Start the monitoring services:
 
    ```bash
    docker compose up -d
@@ -660,7 +660,7 @@ docker run -it --rm \
    EOF
    ```
 
-1. Run the benchmark with desired concurrency and request count:
+2. Run the benchmark with desired concurrency and request count:
 
    ```bash
    ab -n 1000 -c 100 -T application/json -p postdata -H "Authorization: Bearer sk-1234" http://localhost:4000/v1/completions
