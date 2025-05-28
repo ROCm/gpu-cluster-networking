@@ -84,93 +84,93 @@ Perform these actions on each inference node.
 
 1. Create the directory structure:
 
-    ```bash
-    mkdir -p ~/llm-cluster/nodes
-    cd ~/llm-cluster/nodes
-    ```
+   ```bash
+   mkdir -p ~/llm-cluster/nodes
+   cd ~/llm-cluster/nodes
+   ```
 
 1. Create a `.env` file in the `nodes/` folder the with appropriate configuration for your environment:
 
-    ```bash
-    NODE_ID=node1               # Unique identifier for this node
-    MODEL_PATH=/path/to/models  # Path to local or shared model storage
-    MODEL_NAME=Llama-3.1-8B-Instruct  # Model to deploy
-    TP_SIZE=4                   # Tensor parallelism degree (number of GPUs to use)
-    GPU_DEVICES=0,1,2,3         # GPU devices to use
-    PORT=8000                   # Port to expose the inference API
-    SHM_SIZE=32GB               # Shared memory size for container
-    ```
+   ```bash
+   NODE_ID=node1               # Unique identifier for this node
+   MODEL_PATH=/path/to/models  # Path to local or shared model storage
+   MODEL_NAME=Llama-3.1-8B-Instruct  # Model to deploy
+   TP_SIZE=4                   # Tensor parallelism degree (number of GPUs to use)
+   GPU_DEVICES=0,1,2,3         # GPU devices to use
+   PORT=8000                   # Port to expose the inference API
+   SHM_SIZE=32GB               # Shared memory size for container
+   ```
 
 1. Create a `docker-compose.yml` file for the inference nodes. Two options are provided below for different inference backends.
 
-    **vLLM example**
+   **vLLM example**
 
-    ```yaml
-    services:
-      vllm:
-        image: rocm/vllm:instinct_main
-        container_name: vllm_${NODE_ID:-node1}
-        shm_size: ${SHM_SIZE:-32GB}
-        ipc: host
-        network_mode: host
-        devices:
-          - /dev/kfd
-          - /dev/dri
-        group_add:
-          - video
-        security_opt:
-          - seccomp=unconfined
-        volumes:
-          - ${MODEL_PATH}:/data/models
-        environment:
-          - ROCR_VISIBLE_DEVICES=${GPU_DEVICES:-0,1,2,3}
-        command: >
-          vllm serve /data/models/${MODEL_NAME}
-          --dtype float16
-          --tensor-parallel-size ${TP_SIZE:-4}
-          --port ${PORT:-8000}
-        restart: unless-stopped
-    ```
+   ```yaml
+   services:
+     vllm:
+       image: rocm/vllm:instinct_main
+       container_name: vllm_${NODE_ID:-node1}
+       shm_size: ${SHM_SIZE:-32GB}
+       ipc: host
+       network_mode: host
+       devices:
+         - /dev/kfd
+         - /dev/dri
+       group_add:
+         - video
+       security_opt:
+         - seccomp=unconfined
+       volumes:
+         - ${MODEL_PATH}:/data/models
+       environment:
+         - ROCR_VISIBLE_DEVICES=${GPU_DEVICES:-0,1,2,3}
+       command: >
+         vllm serve /data/models/${MODEL_NAME}
+         --dtype float16
+         --tensor-parallel-size ${TP_SIZE:-4}
+         --port ${PORT:-8000}
+       restart: unless-stopped
+   ```
 
    **SGLang example**
 
-    ```yaml
-    services:
-      sglang:
-        image: lmsysorg/sglang:v0.4.6.post2-rocm630
-        container_name: sglang_${NODE_ID:-node1}
-        shm_size: ${SHM_SIZE:-32GB}
-        ipc: host
-        network_mode: host
-        devices:
-          - /dev/kfd
-          - /dev/dri
-        group_add:
-          - video
-        security_opt:
-          - seccomp=unconfined
-        volumes:
-          - ${MODEL_PATH}:/data/models
-        environment:
-          - ROCR_VISIBLE_DEVICES=${GPU_DEVICES:-0,1,2,3}
-          - RCCL_MSCCL_ENABLE=0
-          - CK_MOE=1
-          - HSA_NO_SCRATCH_RECLAIM=1
-        command: >
-          python3 -m sglang.launch_server
-          --model /data/models/${MODEL_NAME}
-          --tp ${TP_SIZE:-4}
-          --trust-remote-code
-          --port ${PORT:-8000}
-          --enable-metrics
-        restart: unless-stopped
-    ```
+   ```yaml
+   services:
+     sglang:
+       image: lmsysorg/sglang:v0.4.6.post2-rocm630
+       container_name: sglang_${NODE_ID:-node1}
+       shm_size: ${SHM_SIZE:-32GB}
+       ipc: host
+       network_mode: host
+       devices:
+         - /dev/kfd
+         - /dev/dri
+       group_add:
+         - video
+       security_opt:
+         - seccomp=unconfined
+       volumes:
+         - ${MODEL_PATH}:/data/models
+       environment:
+         - ROCR_VISIBLE_DEVICES=${GPU_DEVICES:-0,1,2,3}
+         - RCCL_MSCCL_ENABLE=0
+         - CK_MOE=1
+         - HSA_NO_SCRATCH_RECLAIM=1
+       command: >
+         python3 -m sglang.launch_server
+         --model /data/models/${MODEL_NAME}
+         --tp ${TP_SIZE:-4}
+         --trust-remote-code
+         --port ${PORT:-8000}
+         --enable-metrics
+       restart: unless-stopped
+   ```
 
 1. Start the inference services:
 
-    ```bash
-    docker compose up -d
-    ```
+   ```bash
+   docker compose up -d
+   ```
 
 ### API gateway setup
 
@@ -211,83 +211,83 @@ LiteLLM provides specialized routing, load balancing, and observability for LLM 
 
 1. Create `config.yaml` to define the model routing configuration:
 
-    ```yaml
-    model_list:
-      - model_name: DeepSeek-R1
-        litellm_params:
-          model: openai/deepseek-ai/DeepSeek-R1
-          api_base: http://node0:8000/v1
-      
-      - model_name: DeepSeek-R1
-        litellm_params:
-          model: openai/deepseek-ai/DeepSeek-R1
-          api_base: http://node1:8000/v1
+   ```yaml
+   model_list:
+   - model_name: DeepSeek-R1
+      litellm_params:
+         model: openai/deepseek-ai/DeepSeek-R1
+         api_base: http://node0:8000/v1
 
-      # Add additional nodes as needed
-      # - model_name: DeepSeek-R1
-      #   litellm_params:
-      #     model: openai/deepseek-ai/DeepSeek-R1
-      #     api_base: http://nodeN:8000/v1
+   - model_name: DeepSeek-R1
+      litellm_params:
+         model: openai/deepseek-ai/DeepSeek-R1
+         api_base: http://node1:8000/v1
 
-    # Configure load balancing
-    router_settings:
-      routing_strategy: least-busy  # Distributes requests to least busy nodes
-      num_retries: 3                # Number of retries if a request fails
-      timeout: 300                  # Request timeout in seconds
-    ```
+   # Add additional nodes as needed
+   # - model_name: DeepSeek-R1
+   #   litellm_params:
+   #     model: openai/deepseek-ai/DeepSeek-R1
+   #     api_base: http://nodeN:8000/v1
+
+   # Configure load balancing
+   router_settings:
+   routing_strategy: least-busy  # Distributes requests to least busy nodes
+   num_retries: 3                # Number of retries if a request fails
+   timeout: 300                  # Request timeout in seconds
+   ```
 
 1. Create `.env` file with your API key:
 
-    ```bash
-    LITELLM_MASTER_KEY=sk-1234
-    ```
+   ```bash
+   LITELLM_MASTER_KEY=sk-1234
+   ```
 
-    ```{note}
-    For production environments, replace the default key with a strong, randomized value.
-    ```
+   ```{note}
+   For production environments, replace the default key with a strong, randomized value.
+   ```
 
 1. Start the LiteLLM gateway:
 
-    ```bash
-    docker compose up -d
-    ```
+   ```bash
+   docker compose up -d
+   ```
 
 1. Verify that all LLM endpoints are healthy:
 
-    ```bash
-    curl -X 'GET' \
-      'http://localhost:4000/health' \
-      -H 'accept: application/json' \
-      -H 'Authorization: Bearer sk-1234' | jq
-    ```
+   ```bash
+   curl -X 'GET' \
+   'http://localhost:4000/health' \
+   -H 'accept: application/json' \
+   -H 'Authorization: Bearer sk-1234' | jq
+   ```
 
-    **Expected output**
+   **Expected output**
 
-    ```json
-    {
-      "healthy_endpoints": [
-        {
-          "model": "openai/deepseek-ai/DeepSeek-R1",
-          "api_base": "http://node0:8000/v1"
-        },
-        {
-          "model": "openai/deepseek-ai/DeepSeek-R1",
-          "api_base": "http://node1:8000/v1"
-        },
-        {
-          "model": "openai/deepseek-ai/DeepSeek-R1",
-          "api_base": "http://node2:8000/v1"
-        },
-        {
-          "model": "openai/deepseek-ai/DeepSeek-R1",
-          "api_base": "http://node3:8000/v1"
-        }
-      ],
-      "unhealthy_endpoints": [],
-      "healthy_count": 4,
-      "unhealthy_count": 0
-    }
-    ```
+   ```json
+   {
+   "healthy_endpoints": [
+      {
+         "model": "openai/deepseek-ai/DeepSeek-R1",
+         "api_base": "http://node0:8000/v1"
+      },
+      {
+         "model": "openai/deepseek-ai/DeepSeek-R1",
+         "api_base": "http://node1:8000/v1"
+      },
+      {
+         "model": "openai/deepseek-ai/DeepSeek-R1",
+         "api_base": "http://node2:8000/v1"
+      },
+      {
+         "model": "openai/deepseek-ai/DeepSeek-R1",
+         "api_base": "http://node3:8000/v1"
+      }
+   ],
+   "unhealthy_endpoints": [],
+   "healthy_count": 4,
+   "unhealthy_count": 0
+   }
+   ```
 
 ##### LiteLLM monitoring options
 
@@ -308,88 +308,88 @@ Nginx provides a high-performance, scalable HTTP server and reverse proxy that c
 
 1. Create `nginx.conf` with the following configuration:
 
-    ```text
-    worker_processes auto;
-    worker_rlimit_nofile 65535;
-    events {
-        worker_connections 65535;
-    }
+   ```text
+   worker_processes auto;
+   worker_rlimit_nofile 65535;
+   events {
+      worker_connections 65535;
+   }
 
-    http {
-        include       mime.types;
-        default_type  application/octet-stream;
-        sendfile      on;
-        keepalive_timeout 65;
+   http {
+      include       mime.types;
+      default_type  application/octet-stream;
+      sendfile      on;
+      keepalive_timeout 65;
 
-        # Define upstream server group
-        upstream vllm_pool {
-            # Use least_conn for distributing traffic based on least number of current connections
-            least_conn;
-            
-            # Add inference server entries - update with your node hostnames/IPs
-            server node0:8000;
-            server node1:8000;
-            # Add additional nodes as needed
-            # server nodeN:8000;
-            
-            keepalive 32;
-        }
+      # Define upstream server group
+      upstream vllm_pool {
+         # Use least_conn for distributing traffic based on least number of current connections
+         least_conn;
+         
+         # Add inference server entries - update with your node hostnames/IPs
+         server node0:8000;
+         server node1:8000;
+         # Add additional nodes as needed
+         # server nodeN:8000;
+         
+         keepalive 32;
+      }
 
-        server {
-            listen 80;
-            
-            # Health check endpoint
-            location /health {
-                return 200 'healthy\n';
-                add_header Content-Type text/plain;
-            }
+      server {
+         listen 80;
+         
+         # Health check endpoint
+         location /health {
+               return 200 'healthy\n';
+               add_header Content-Type text/plain;
+         }
 
-            # API endpoint for frontend clients
-            location / {
-                proxy_pass http://vllm_pool;
-                proxy_http_version 1.1;
-                proxy_set_header Connection "";
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                
-                # Timeouts for long-running inference requests
-                proxy_connect_timeout 300s;
-                proxy_read_timeout 300s;
-                proxy_send_timeout 300s;
-                
-                # Buffer settings for large responses
-                proxy_buffer_size 16k;
-                proxy_buffers 8 16k;
-                proxy_busy_buffers_size 32k;
-            }
-        }
-    }
-    ```
+         # API endpoint for frontend clients
+         location / {
+               proxy_pass http://vllm_pool;
+               proxy_http_version 1.1;
+               proxy_set_header Connection "";
+               proxy_set_header Host $host;
+               proxy_set_header X-Real-IP $remote_addr;
+               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+               
+               # Timeouts for long-running inference requests
+               proxy_connect_timeout 300s;
+               proxy_read_timeout 300s;
+               proxy_send_timeout 300s;
+               
+               # Buffer settings for large responses
+               proxy_buffer_size 16k;
+               proxy_buffers 8 16k;
+               proxy_busy_buffers_size 32k;
+         }
+      }
+   }
+   ```
 
 1. Create `docker-compose.yml` for Nginx:
 
-    ```yaml
-    services:
-      nginx:
-        image: nginx:latest
-        container_name: nginx_gateway
-        network_mode: host
-        volumes:
-          - ./nginx.conf:/etc/nginx/nginx.conf:ro
-        restart: unless-stopped
-        logging:
-          driver: "json-file"
-          options:
-            max-size: "10m"
-            max-file: "3"
-    ```
+   ```yaml
+   services:
+   nginx:
+      image: nginx:latest
+      container_name: nginx_gateway
+      network_mode: host
+      volumes:
+         - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      restart: unless-stopped
+      logging:
+         driver: "json-file"
+         options:
+         max-size: "10m"
+         max-file: "3"
+   ```
 
 1. Start the Nginx gateway:
 
-    ```bash
-    docker compose up -d
-    ```
+   ```bash
+   docker compose up -d
+   ```
 
 ##### Monitoring Nginx gateway
 
@@ -397,32 +397,32 @@ To enable monitoring for your Nginx gateway, add the `nginx-prometheus-exporter`
 
 1. Update `docker-compose.yml` to include the exporter:
 
-    ```yaml
-    services:
-      nginx:
-        # ...existing nginx configuration...
+   ```yaml
+   services:
+   nginx:
+      # ...existing nginx configuration...
 
-      nginx-exporter:
-        image: nginx/nginx-prometheus-exporter:latest
-        container_name: nginx_exporter
-        command:
-          - --nginx.scrape-uri=http://localhost/stub_status
-        network_mode: host
-        restart: unless-stopped
-        depends_on:
-          - nginx
-    ```
+   nginx-exporter:
+      image: nginx/nginx-prometheus-exporter:latest
+      container_name: nginx_exporter
+      command:
+         - --nginx.scrape-uri=http://localhost/stub_status
+      network_mode: host
+      restart: unless-stopped
+      depends_on:
+         - nginx
+   ```
 
 1. Add a status endpoint to `nginx.conf` inside the server block:
 
-    ```text
-    location /metrics {
-        stub_status on;
-        access_log off;
-        allow 127.0.0.1;
-        deny all;
-    }
-    ```
+   ```text
+   location /metrics {
+      stub_status on;
+      access_log off;
+      allow 127.0.0.1;
+      deny all;
+   }
+   ```
 
 ## Monitoring stack setup
 
@@ -430,149 +430,149 @@ Perform these steps on the monitoring node.
 
 1. Create the monitoring directory structure:
 
-    ```bash
-    mkdir -p ~/llm-cluster/monitoring/{prometheus,grafana,influxdb}
-    cd ~/llm-cluster/monitoring
-    ```
+   ```bash
+   mkdir -p ~/llm-cluster/monitoring/{prometheus,grafana,influxdb}
+   cd ~/llm-cluster/monitoring
+   ```
 
 1. Set appropriate permissions for Grafana and InfluxDB data directories:
 
-    ```bash
-    # Set permissions to allow container processes to write data
-    chmod 777 ~/llm-cluster/monitoring/grafana
-    chmod 777 ~/llm-cluster/monitoring/influxdb
-    ```
+   ```bash
+   # Set permissions to allow container processes to write data
+   chmod 777 ~/llm-cluster/monitoring/grafana
+   chmod 777 ~/llm-cluster/monitoring/influxdb
+   ```
 
 1. Create `docker-compose.yml` for the monitoring stack:
 
-    ```yaml
-    services:
-      # Check https://hub.docker.com/r/rocm/device-metrics-exporter/tags for the latest version
-      device-metrics-exporter:
-        image: rocm/device-metrics-exporter:v1.3.0-beta.1
-        container_name: device-metrics-exporter
-        restart: unless-stopped
-        group_add:
-          - video    
-        volumes:
-          - ./config.json:/etc/metrics/config.json
-        devices:
-          - /dev/kfd
-          - /dev/dri
-        ports:
-          - "5000:5000"
+   ```yaml
+   services:
+   # Check https://hub.docker.com/r/rocm/device-metrics-exporter/tags for the latest version
+   device-metrics-exporter:
+      image: rocm/device-metrics-exporter:v1.3.0-beta.1
+      container_name: device-metrics-exporter
+      restart: unless-stopped
+      group_add:
+         - video    
+      volumes:
+         - ./config.json:/etc/metrics/config.json
+      devices:
+         - /dev/kfd
+         - /dev/dri
+      ports:
+         - "5000:5000"
 
-      prometheus:
-        image: prom/prometheus:latest
-        container_name: prometheus
-        volumes:
-          - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-        command:
-          - '--config.file=/etc/prometheus/prometheus.yml'
-        ports:
-          - "9090:9090"
-        restart: unless-stopped
+   prometheus:
+      image: prom/prometheus:latest
+      container_name: prometheus
+      volumes:
+         - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      command:
+         - '--config.file=/etc/prometheus/prometheus.yml'
+      ports:
+         - "9090:9090"
+      restart: unless-stopped
 
-      influxdb:
-        image: influxdb:1.11.8
-        container_name: influxdb
-        ports:
-          - "8086:8086"
-        environment:
-          - INFLUXDB_DB=k6
-          - INFLUXDB_ADMIN_USER=admin
-          - INFLUXDB_ADMIN_PASSWORD=admin
-        volumes:
-          - ./influxdb:/var/lib/influxdb
+   influxdb:
+      image: influxdb:1.11.8
+      container_name: influxdb
+      ports:
+         - "8086:8086"
+      environment:
+         - INFLUXDB_DB=k6
+         - INFLUXDB_ADMIN_USER=admin
+         - INFLUXDB_ADMIN_PASSWORD=admin
+      volumes:
+         - ./influxdb:/var/lib/influxdb
 
-      grafana:
-        image: grafana/grafana:latest
-        container_name: grafana
-        volumes:
-          - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-          - ./grafana:/var/lib/grafana
-        environment:
-          - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
-        ports:
-          - "3000:3000"
-        depends_on:
-          - prometheus
-        restart: unless-stopped
-    ```
+   grafana:
+      image: grafana/grafana:latest
+      container_name: grafana
+      volumes:
+         - ./grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+         - ./grafana:/var/lib/grafana
+      environment:
+         - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      ports:
+         - "3000:3000"
+      depends_on:
+         - prometheus
+      restart: unless-stopped
+   ```
 
 1. Create `prometheus/prometheus.yml` to configure metrics collection:
 
-    ```yaml
-    global:
+   ```yaml
+   global:
+   scrape_interval: 15s
+
+   scrape_configs:
+   # Host OS metrics
+   - job_name: 'node'
+      static_configs:
+      - targets: ['localhost:9100']
+
+   # Inference servers
+   - job_name: 'vllm'
+      metrics_path: /metrics
       scrape_interval: 15s
+      static_configs:
+         - targets: ['node0:8000', 'node1:8000'] # Add additional nodes as needed
+         labels:
+            service: 'vllm'
+   
+   # Nginx Gateway metrics (if using Nginx with nginx-prometheus-exporter)
+   - job_name: 'nginx'
+      scrape_interval: 15s
+      metrics_path: /metrics
+      static_configs:
+         - targets: ['localhost:9113']
+      relabel_configs:
+         - source_labels: [__address__]
+         target_label: instance
+         replacement: 'nginx-gateway'
 
-    scrape_configs:
-      # Host OS metrics
-      - job_name: 'node'
-        static_configs:
-        - targets: ['localhost:9100']
+   # AMD GPU device metrics
+   - job_name: 'amd_gpu_metrics'
+      scrape_interval: 5s
+      metrics_path: /metrics
+      static_configs:
+         - targets: ['node0:5000', 'node1:5000']
+         labels:
+            service: 'amd_gpu_metrics'        
+   ```
 
-      # Inference servers
-      - job_name: 'vllm'
-        metrics_path: /metrics
-        scrape_interval: 15s
-        static_configs:
-          - targets: ['node0:8000', 'node1:8000'] # Add additional nodes as needed
-            labels:
-              service: 'vllm'
-      
-      # Nginx Gateway metrics (if using Nginx with nginx-prometheus-exporter)
-      - job_name: 'nginx'
-        scrape_interval: 15s
-        metrics_path: /metrics
-        static_configs:
-          - targets: ['localhost:9113']
-        relabel_configs:
-          - source_labels: [__address__]
-            target_label: instance
-            replacement: 'nginx-gateway'
-
-      # AMD GPU device metrics
-      - job_name: 'amd_gpu_metrics'
-        scrape_interval: 5s
-        metrics_path: /metrics
-        static_configs:
-          - targets: ['node0:5000', 'node1:5000']
-            labels:
-              service: 'amd_gpu_metrics'        
-    ```
-
-    ```{note}
-    Replace `node0` and `node1` with the actual hostnames or IP addresses of your inference nodes. When running Prometheus in a docker container, change instances of `localhost` to `host.docker.internal`. 
-    ```
+   ```{note}
+   Replace `node0` and `node1` with the actual hostnames or IP addresses of your inference nodes. When running Prometheus in a docker container, change instances of `localhost` to `host.docker.internal`. 
+   ```
 
 1. Create `grafana/datasources.yml` to configure the Prometheus data source:
 
-    ```yaml
-    apiVersion: 1
+   ```yaml
+   apiVersion: 1
 
-    datasources:
-      - name: Prometheus
-        type: prometheus
-        access: proxy
-        url: http://prometheus:9091
-        isDefault: true
+   datasources:
+   - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus:9091
+      isDefault: true
 
-      - name: InfluxDB
-        type: influxdb
-        access: proxy
-        url: http://influxdb:8086
-        database: k6
-        user: admin
-        password: admin
-        editable: true    
-    ```
+   - name: InfluxDB
+      type: influxdb
+      access: proxy
+      url: http://influxdb:8086
+      database: k6
+      user: admin
+      password: admin
+      editable: true    
+   ```
 
 1. Start the monitoring services:
 
-    ```bash
-    docker compose up -d
-    ```
+   ```bash
+   docker compose up -d
+   ```
 
 ## Testing and performance evaluation
 
@@ -654,17 +654,17 @@ docker run -it --rm \
 
 1. Create a request payload file:
 
-    ```bash
-    cat > postdata << EOF
-    {"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}
-    EOF
-    ```
+   ```bash
+   cat > postdata << EOF
+   {"model": "DeepSeek-R1", "prompt": "What is AMD Instinct?", "max_tokens": 256, "temperature": 0.0}
+   EOF
+   ```
 
 1. Run the benchmark with desired concurrency and request count:
 
-    ```bash
-    ab -n 1000 -c 100 -T application/json -p postdata -H "Authorization: Bearer sk-1234" http://localhost:4000/v1/completions
-    ```
+   ```bash
+   ab -n 1000 -c 100 -T application/json -p postdata -H "Authorization: Bearer sk-1234" http://localhost:4000/v1/completions
+   ```
 
 Key parameters:
 
