@@ -1,0 +1,35 @@
+
+  sglang:
+    image: lmsysorg/sglang:v0.4.6.post4-rocm630
+    container_name: sglang_${NODE_ID:-node1}
+    shm_size: ${SHM_SIZE:-32GB}
+    ipc: host
+    network_mode: host
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - video
+    security_opt:
+      - seccomp=unconfined
+    volumes:
+      - ${MODEL_PATH}:/data/models
+    environment:
+      - ROCR_VISIBLE_DEVICES=${GPU_DEVICES:-0,1,2,3}
+      - RCCL_MSCCL_ENABLE=0
+      - CK_MOE=1
+      - HSA_NO_SCRATCH_RECLAIM=1
+    command: >
+      python3 -m sglang.launch_server
+      --model /data/models/${MODEL_NAME}
+      --tp ${TP_SIZE:-4}
+      --trust-remote-code
+      --port ${PORT:-8000}
+      --enable-metrics
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 6
+      start_period: 90s

@@ -28,6 +28,7 @@ optimal speed and bandwidth during operation.
       * :doc:`Single-node network configuration <how-to/single-node-config>`
       * :doc:`Multi-node network configuration <how-to/multi-node-config>`
       * :doc:`RoCE network configuration <how-to/roce-network-config>`
+      * `Multi-node inference load balancing <./how-to/multi-node-inference-lb.html>`_
 
    .. grid-item-card:: Reference
 

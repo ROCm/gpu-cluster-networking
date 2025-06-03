@@ -1,0 +1,35 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # Host OS metrics
+  - job_name: node
+    static_configs:
+    - targets: ['host.docker.internal:9100'] 
+
+  # Replace target values with your node names/IPs. Add additional nodes as needed
+  - job_name: 'vllm'
+    metrics_path: /metrics
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['node0:8000', 'node1:8000', 'node2:8000', 'node3:8000'] 
+        labels:
+          service: 'vllm'
+
+  # Nginx Gateway metrics (if using Nginx with nginx-prometheus-exporter). Replace target value with correct hostname/IP.
+  - job_name: 'nginx'
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['nginx:9113']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'nginx-gateway'
+
+  # AMD GPU device metrics
+  - job_name: 'amd_gpu_metrics'
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:5000']
