@@ -1,0 +1,32 @@
+services:
+  vllm:
+    image: rocm/vllm:instinct_main
+    container_name: vllm_${NODE_ID:-node1}
+    shm_size: ${SHM_SIZE:-32GB}
+    ipc: host
+    network_mode: host
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - video
+    security_opt:
+      - seccomp=unconfined
+    volumes:
+      - ${MODEL_PATH}:/data/models
+    environment:
+      - ROCR_VISIBLE_DEVICES=${GPU_DEVICES:-0,1,2,3}
+    command: >
+      vllm serve /data/models/${MODEL_NAME}
+      --dtype float16
+      --tensor-parallel-size ${TP_SIZE:-4}
+      --port ${PORT:-8000}
+    restart: unless-stopped
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 10s
+      retries: 6
+      start_period: 90s    

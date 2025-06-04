@@ -1,0 +1,25 @@
+model_list:
+  - model_name: DeepSeek-R1
+    litellm_params:
+      model: openai/deepseek-ai/DeepSeek-R1
+      api_base: http://vllm-model0:8000/v1
+  
+  - model_name: DeepSeek-R1
+    litellm_params:
+      model: openai/deepseek-ai/DeepSeek-R1
+      api_base: http://vllm-model1:8000/v1
+
+  - model_name: DeepSeek-R1
+    litellm_params:
+      model: openai/deepseek-ai/DeepSeek-R1
+      api_base: http://vllm-model2:8000/v1
+  
+  - model_name: DeepSeek-R1
+    litellm_params:
+      model: openai/deepseek-ai/DeepSeek-R1
+      api_base: http://vllm-model3:8000/v1
+
+router_settings:
+  routing_strategy: least-busy
+  num_retries: 3
+  timeout: 300

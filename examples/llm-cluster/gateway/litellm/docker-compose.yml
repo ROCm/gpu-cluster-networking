@@ -1,0 +1,10 @@
+  proxy:
+    image: litellm/litellm:stable
+    ports:
+      - "4000:4000"
+    command: [ "--config", "/app/config.yaml", "--port", "4000"]
+    restart: on-failure      
+    environment:
+      - OPENAI_API_KEY="sk-1234"
+    volumes:
+      - ./config.yaml:/app/config.yaml
