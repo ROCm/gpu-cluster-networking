@@ -12,7 +12,7 @@ subtrees:
   - file: how-to/multi-node-config
     title: Multi-node networking
   - file: how-to/multi-node-inference-lb.md
-    title: Multi-Node inference load balancing 
+    title: Multi-node inference load balancing 
   - file: how-to/roce-network-config
     title: RoCE network configuration  
 - caption: Reference
