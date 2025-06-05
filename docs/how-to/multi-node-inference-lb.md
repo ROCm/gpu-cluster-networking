@@ -691,7 +691,7 @@ ab -n 20000 -c 2000 -T application/json -p postdata http://localhost:80/v1/compl
 
 ### Advanced load testing with k6
 
-For more sophisticated load testing scenarios, Grafana k6 offers enhanced capabilities including detailed metrics collection and realistic user simulation. The test scripts used in this section are available to download from [https://github.com/ROCm/gpu-cluster-networking/examples/llm-cluster/monitoring/scripts](https://github.com/ROCm/gpu-cluster-networking/examples/llm-cluster/monitoring/scripts)
+For more sophisticated load testing scenarios, Grafana k6 offers enhanced capabilities including detailed metrics collection and realistic user simulation. The test scripts used in this section are available to download from [https://github.com/ROCm/gpu-cluster-networking/tree/develop/examples/llm-cluster/monitoring/scripts](https://github.com/ROCm/gpu-cluster-networking/tree/develop/examples/llm-cluster/monitoring/scripts)
 
 #### Installing k6
 
