@@ -97,9 +97,9 @@ In this case, the NIC is not configured to support RoCE, so run ``nvm -setoption
          sudo niccli -i <NIC index> nvm -setoption support_rdma -value <value> -scope <scope index>
 
 Other vendors use different utilities and flags to control this setting; refer to vendor-specific documentation in these
-scenarios. For Broadcom NICs, you can also refer to the :ref:`Broadcom RoCE configuration
-scripts<RoCE-configuration-script-for-Broadcom-Thor-NIC>` provided in the networking guides to review and configure RDMA
-support in bulk on each NIC in a node.
+scenarios. You can also refer to the `NICCLI configuration scripts
+<https://github.com/ROCm/cluster-networking/tree/main/niccli_scripts>`_ provided in the cluster networking github to
+review and configure RDMA support in bulk on each NIC in a node.
 
 Enable PCIe relaxed ordering
 ------------------------------------------------------------------------------------------------------------------------
@@ -150,9 +150,9 @@ If ``pcie_relaxed_ordering`` shows a ``disabled`` value, you can enable it with 
          sudo niccli -i <NIC index> nvm -setoption pcie_relaxed_ordering -value <value>
 
 For other vendors, refer to vendor-specific documentation for information about how to verify and enable this setting.
-Additionally, for Broadcom NICs you can also refer to the :ref:`Broadcom RoCE configuration
-scripts<RoCE-configuration-script-for-Broadcom-Thor-NIC>` provided in the networking guides to review and configure
-relaxed ordering in bulk on each NIC in a node.
+You can also refer to the `NICCLI configuration scripts
+<https://github.com/ROCm/cluster-networking/tree/main/niccli_scripts>`_ provided in the cluster networking github to
+review and configure relaxed ordering in bulk on each NIC in a node.
 
 Disable ACS and set IOMMU passthrough
 ------------------------------------------------------------------------------------------------------------------------
@@ -160,10 +160,11 @@ Disable ACS and set IOMMU passthrough
 On any nodes hosting GPUs, ensure you disable ACS and configure IOMMU passthrough to ensure peer to peer transfer
 between NICs and GPUs functions as expected.
 
-To disable ACS, use the :ref:`disable ACS script<disable-acs-script>` provided in the single-node network guide. To set
-IOMMU passthrough on a Linux system, add ``iommu=pt`` to the ``GRUB_CMDLINE_LINUX_DEFAULT`` entry in
-``/etc/default/grub``, then run ``sudo update-grub``. You can see a more detailed flow at
-`GRUB settings <https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/mi300x.html#mi300x-grub-settings>`_
+To disable ACS, use the `disable ACS script
+<https://github.com/ROCm/cluster-networking/blob/main/general_scripts/dis_acs.sh>`_ provided on the cluster networking
+github. To set IOMMU passthrough on a Linux system, add ``iommu=pt`` to the ``GRUB_CMDLINE_LINUX_DEFAULT`` entry in
+``/etc/default/grub``, then run ``sudo update-grub``. You can see a more detailed flow at `GRUB settings
+<https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/mi300x.html#mi300x-grub-settings>`_
 and :ref:`rocm-install-on-linux:multi-gpu`.
 
 Enable DCQCN through QoS configuration

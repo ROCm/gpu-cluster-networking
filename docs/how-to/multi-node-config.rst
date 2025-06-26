@@ -46,7 +46,7 @@ information.
 
 .. important::
 
-  You must still run the :ref:`disable ACS script<disable-acs-script>` prior to running any workloads, as the BIOS
+  You must still run the `disable ACS script <https://github.com/ROCm/cluster-networking/blob/main/general_scripts/dis_acs.sh>`_ prior to running any workloads, as the BIOS
   setting (if present) may not disable all ACS configurations at the OS level.
 
 Single tier switch configuration

@@ -40,8 +40,9 @@ Before following the steps in the following sections, ensure you have completed 
 
    c. See :ref:`Disable NUMA auto-balancing <mi300x-rccl-disable-numa>` for more information.
 
-#. Disable PCI ACS (access control services). Run the :ref:`disable ACS script<disable-acs-script>` on all PCIe devices
-   supporting it. This must be done after each reboot.
+#. Disable PCI ACS (access control services). Run the `disable-acs-script
+   <https://github.com/ROCm/cluster-networking/blob/main/general_scripts/dis_acs.sh>`_ on all PCIe devices supporting
+   it. This must be done after each reboot.
 
    .. note::
 
@@ -240,9 +241,13 @@ Vendor-specific NIC tuning
 Your NICs may require tuning if it has not already been done. Some steps differ based on the type of NIC you're
 deploying (InfiniBand or RoCE).
 
-* Ensure :ref:`ACS is disabled<disable-acs-script>`.
+* Ensure ACS is disabled manually or by running the `ACS disable script
+  <https://github.com/ROCm/cluster-networking/blob/main/general_scripts/dis_acs.sh>`_.
 
-* For Mellanox NICs (InfiniBand or RoCE): Disable ATS, enable PCI Relaxed Ordering, increase max read requests, enable
+  .. note::
+   ACS may need to be disabled in BIOS settings as well, if supported by your hardware.
+
+* For Mellanox NICs (InfiniBand or RoCE): Enable PCIe relaxed ordering, increase max read requests, enable
   advanced PCI settings. 
 
   .. code-block:: shell
@@ -259,10 +264,12 @@ deploying (InfiniBand or RoCE).
 
      reboot
 
-* For Broadcom NICs, ensure RoCE is enabled and consider disabling any unused ports. See the :ref:`Broadcom RoCE
-  configuration scripts<RoCE-configuration-script-for-Broadcom-Thor-NIC>` for more details.
+* For Broadcom NICs: enable PCIe relaxed ordering, RDMA support, RoCE performance profile, set speed mask exclude to
+  200G, and consider disabling any unused ports. For assistance, use the scripts available on the `cluster
+  networking github
+  <https://github.com/ROCm/cluster-networking/tree/main/niccli_scripts>`_ for each configuration setting.
 
-* Ensure Relaxed Ordering is enabled in the PCIe settings for your system BIOS as well.
+* Ensure relaxed ordering is enabled in the PCIe settings for your system BIOS as well.
 
 .. note::
 
@@ -277,6 +284,10 @@ measure speed based on your network type.
 * RoCE / Ethernet
    - ``sudo ethtool <interface> | grep -i speed``
    - ``cat /sys/class/net/<interface>/speed``
+  
+  .. note::
+   An `ethtool script <https://github.com/ROCm/cluster-networking/blob/main/general_scripts/set_nic_speed.sh>`_ is 
+   available for configuring a desired speed (default target 200G) on all available nodes.
 
 * InfiniBand
    - ``ibdiagnet`` provides an output of the entire fabric in the default log files. You can verify link speeds here.
@@ -767,92 +778,4 @@ Running a bidirectional benchmark on all available device combinations:
 For a more detailed explanation of different ways to run ROCm Bandwidth Test, see the `ROCm Bandwidth Test user guide
 <https://github.com/ROCm/rocm_bandwidth_test/blob/master/ROCmBandwithTest_UserGuide.pdf>`_.
 
-Configuration scripts
-========================================================================================================================
-
-Run these scripts where indicated to aid in the configuration and setup of your devices.
-
-.. _disable-acs-script:
-
-.. dropdown:: Disable ACS script
-
-   .. code-block:: shell
-
-      #!/bin/bash
-      #
-      # Disable ACS on every device that supports it
-      #
-      PLATFORM=$(dmidecode --string system-product-name)
-      logger "PLATFORM=${PLATFORM}"
-      # Enforce platform check here.
-      #case "${PLATFORM}" in
-               #"OAM"*)
-                     #logger "INFO: Disabling ACS is no longer necessary for ${PLATFORM}"
-                     #exit 0
-                     #;;
-               #*)
-                     #;;
-      #esac
-      # must be root to access extended PCI config space
-      if [ "$EUID" -ne 0 ]; then
-               echo "ERROR: $0 must be run as root"
-               exit 1
-      fi
-      for BDF in `lspci -d "*:*:*" | awk '{print $1}'`; do
-               # skip if it doesn't support ACS
-               setpci -v -s ${BDF} ECAP_ACS+0x6.w > /dev/null 2>&1
-               if [ $? -ne 0 ]; then
-                     #echo "${BDF} does not support ACS, skipping"
-                     continue
-               fi
-               logger "Disabling ACS on `lspci -s ${BDF}`"
-               setpci -v -s ${BDF} ECAP_ACS+0x6.w=0000
-               if [ $? -ne 0 ]; then
-                     logger "Error enabling directTrans ACS on ${BDF}"
-                     continue
-               fi
-               NEW_VAL=`setpci -v -s ${BDF} ECAP_ACS+0x6.w | awk '{print $NF}'`
-               if [ "${NEW_VAL}" != "0000" ]; then
-                     logger "Failed to enabling directTrans ACS on ${BDF}"
-                     continue
-               fi
-      done
-      exit 0
-
-.. _RoCE-configuration-script-for-Broadcom-Thor-NIC:
-
-.. dropdown:: RoCE configuration script for Broadcom Thor NIC
-
-   .. code-block:: shell
-
-      # Increase Max Read request Size to 4k 
-      lspci -vvvs 41:00.0 | grep axReadReq
-
-      # Check if Relaxed Ordering is enabled
-
-      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i getoption -name pcie_relaxed_ordering); done
-
-      # Set Relaxed Ordering if not enabled 
-
-      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i setoption -name pcie_relaxed_ordering -value 1); done
-
-      # Check if RDMA support is enabled
-
-      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo niccli -dev=$i getoption -name support_rdma -scope 0) - $(sudo niccli -dev=$i \ getoption=support_rdma:1); done
-
-      # Set RMDA support if not enabled 
-
-      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo \ niccli -dev=$i setoption -name support_rdma -scope 0 -value 1) - $(sudo niccli -dev=$i \ setoption -name support_rdma -scope 1 -value 1); done
-
-      # Set Speed Mask
-
-      niccli -dev=<interface name> setoption=autodetect_speed_exclude_mask:0#01C0
-
-      # Set 200Gbps
-
-      ethtool -s <interface name> autoneg off speed 200000 duplex full
-
-      # Set performance profile to RoCE ==REQUIRES REBOOT IF OLDER FIRMWARE LOADED==
-
-      for i in $(sudo niccli --listdev | grep Interface | awk {'print $5'}); \ do echo $i - $(sudo \ niccli -dev=$i setoption -name performance_profile -value 1); done
 
