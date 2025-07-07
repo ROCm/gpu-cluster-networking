@@ -52,7 +52,7 @@ Before following the steps in the following sections, ensure you have completed 
 
 #. Configure IOMMU settings.
 
-   a. Add ``iommu=pt`` to the ``GRUB_CMDLINE_LINUX_DEFAULT`` entry in ``/etc/default/grub``.
+   a. Add ``iommu=pt`` and ``pci=bfsort`` to the ``GRUB_CMDLINE_LINUX_DEFAULT`` entry in ``/etc/default/grub``.
 
    b. Run ``sudo update-grub``, then reboot.
 
