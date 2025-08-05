@@ -22,3 +22,5 @@ html_theme_options = {
     "flavor": "instinct"
 }
 extensions = ["rocm_docs"]
+
+html_static_path = ['_static']
