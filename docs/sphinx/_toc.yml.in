@@ -15,8 +15,12 @@ subtrees:
     title: Multi-node inference load balancing 
   - file: how-to/roce-network-config
     title: RoCE network configuration  
+
 - caption: Reference
   entries:
   - file: reference/hardware-support
+    title: Hardware support
+  - file: reference/cluster-design
+    title: Cluster design
   - url: https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/other/instinct-mi300-series-cluster-reference-guide.pdf
     title: MI300 series cluster architecture
