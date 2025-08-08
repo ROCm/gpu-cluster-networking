@@ -71,8 +71,7 @@ ROCm, use the following instructions.
       cd $BUILD_DIR
       wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.7.tar.gz
       tar zxvf openmpi-5.0.7.tar.gz
-      cd ompi-5.0.7/ 
-      ./autogen.pl
+      cd openmpi-5.0.7      
       mkdir build
       cd build
       ../configure --prefix=$OMPI_DIR --with-ucx=$UCX_DIR \
