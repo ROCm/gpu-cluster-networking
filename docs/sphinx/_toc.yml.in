@@ -15,6 +15,8 @@ subtrees:
     title: Multi-node inference load balancing 
   - file: how-to/roce-network-config
     title: RoCE network configuration  
+  - file: how-to/troubleshooting
+    title: Network troubleshooting
 
 - caption: Reference
   entries:

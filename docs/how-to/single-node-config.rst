@@ -88,6 +88,8 @@ where it may not be obvious.
    Gather all the PCIe addresses for your GPUs, NICs, and switches in advance and take note of them so you have them on
    hand for next steps.
 
+.. _PCie-device-speed-width:
+
 Check PCIe device speed and width
 ------------------------------------------------------------------------------------------------------------------------
 

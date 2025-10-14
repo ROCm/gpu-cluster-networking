@@ -428,6 +428,8 @@ scanning from 8 bytes to 16 gigabytes (``-b 8 -e 16G``).
 Further examples in this guide continue to use ``AllReduce``, but you can run any of the other operations by editing the
 path to point at your desired RCCL test.
 
+.. _multi-node-rccl: 
+
 Multi-node RCCL operations
 ------------------------------------------------------------------------------------------------------------------------
 
