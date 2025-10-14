@@ -1,0 +1,29 @@
+/* Network troubleshooting page */
+
+/* Custom width for rccl errors table */
+table.rccl-errors {
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+table.rccl-errors th:nth-child(1),
+table.rccl-errors td:nth-child(1) {
+    width: 40% !important;
+}
+table.rccl-errors th:nth-child(2),
+table.rccl-errors td:nth-child(2) {
+    width: 60% !important;
+}
+
+/* Custom width for rdma errors table */
+table.rdma-errors {
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+table.rdma-errors th:nth-child(1),
+table.rdma-errors td:nth-child(1) {
+    width: 40% !important;
+}
+table.rdma-errors th:nth-child(2),
+table.rdma-errors td:nth-child(2) {
+    width: 60% !important;
+}

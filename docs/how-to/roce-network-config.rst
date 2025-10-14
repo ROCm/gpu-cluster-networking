@@ -718,6 +718,8 @@ run. Just make sure that the QoS configuration generated on the switch match tho
       priority-flow-control watchdog restore-time 400
       !
 
+.. _arp-flux-prevention:
+
 Backend network routing methods for preventing ARP flux
 ========================================================================================================================
 
