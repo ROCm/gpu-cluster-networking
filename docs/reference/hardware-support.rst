@@ -16,6 +16,24 @@ The GPU workloads and benchmarks specified in the :doc:`Single Node </how-to/sin
 :doc:`Multi-node </how-to/multi-node-config>` networking guides should work as written on the following microarchitectures,
 presuming a :doc:`supported version <rocm:compatibility/compatibility-matrix>` of ROCm.
 
+.. _MI355X-support:
+
+MI355X
+------------------------------------------------------------------------------------------------------------------------
+
+MI355X GPUs require ROCm 7.0.0 or higher when running GPU applications as this is the earliest version of ROCm where MI355X
+has `explicit support <https://rocm.docs.amd.com/en/docs-7.0.0/reference/gpu-arch-specs.html>`_. Attempts to run
+workloads with earlier ROCm versions are unsuccessful on MI355X.
+
+.. _MI350X-support:
+
+MI350X
+------------------------------------------------------------------------------------------------------------------------
+
+MI350X GPUs require ROCm 7.0.0 or higher when running GPU applications as this is the earliest version of ROCm where MI350X
+has `explicit support <https://rocm.docs.amd.com/en/docs-7.0.0/reference/gpu-arch-specs.html>`_. Attempts to run
+workloads with earlier ROCm versions are unsuccessful on MI350X.
+
 .. _MI325X-support:
 
 MI325X
@@ -48,13 +66,47 @@ for low-latency, high-throughput communication.
 
 The processes detailed in these guides are validated to run on the following hardware with AMD Instinct™ accelerators:
 
+NICs for AMD Instinct MI355X
+------------------------------------------------------------------------------------------------------------------------
+
++--------------------------+--------------+----------------------+
+| Product name             | Speed (GB/s) | Interconnect         |
++==========================+==============+======================+
+| Pollara 400 AI NIC       | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+| Broadcom P2200G          | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+| Broadcom P1400GD         | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+| Broadcom N1400GD         | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+| Broadcom N2200G          | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+
+NICs for AMD Instinct MI350X
+------------------------------------------------------------------------------------------------------------------------
+
++--------------------------+--------------+----------------------+
+| Product name             | Speed (GB/s) | Interconnect         |
++==========================+==============+======================+
+| Pollara 400 AI NIC       | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+| Broadcom P2200G          | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+| Broadcom P1400GD         | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+| Broadcom N1400GD         | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+| Broadcom N2200G          | 400          | RoCE v2              |
++--------------------------+--------------+----------------------+
+
 NICs for AMD Instinct MI325X
 ------------------------------------------------------------------------------------------------------------------------
 
 +--------------------------+--------------+----------------------+
 | Product name             | Speed (GB/s) | Interconnect         |
 +==========================+==============+======================+
-| AMD Pollara 400 Card     | 400          | RoCEv2               |
+| Pollara 400 AI NIC       | 400          | RoCE v2              |
 +--------------------------+--------------+----------------------+
 | Broadcom P2200G          | 400          | RoCE v2              |
 +--------------------------+--------------+----------------------+
@@ -73,7 +125,7 @@ NICs for AMD Instinct MI300X
 +--------------------------+--------------+----------------------+
 | Product name             | Speed (GB/s) | Interconnect         |
 +==========================+==============+======================+
-| AMD Pollara 400 Card     | 400          | RoCEv2               |
+| Pollara 400 AI NIC       | 400          | RoCE v2              |
 +--------------------------+--------------+----------------------+
 | Broadcom P2200G          | 400          | RoCE v2              |
 +--------------------------+--------------+----------------------+
