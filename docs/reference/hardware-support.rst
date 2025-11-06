@@ -21,18 +21,16 @@ presuming a :doc:`supported version <rocm:compatibility/compatibility-matrix>` o
 MI355X
 ------------------------------------------------------------------------------------------------------------------------
 
-MI355X GPUs require ROCm 7.0.0 or higher when running GPU applications as this is the earliest version of ROCm where MI355X
-has `explicit support <https://rocm.docs.amd.com/en/docs-7.0.0/reference/gpu-arch-specs.html>`_. Attempts to run
-workloads with earlier ROCm versions are unsuccessful on MI355X.
+MI355X GPUs require ROCm 7.0.1 or higher when running GPU applications as this is the earliest version of ROCm where MI355X
+has `certified support <https://rocm.docs.amd.com/en/docs-7.0.0/reference/gpu-arch-specs.html>`_.
 
 .. _MI350X-support:
 
 MI350X
 ------------------------------------------------------------------------------------------------------------------------
 
-MI350X GPUs require ROCm 7.0.0 or higher when running GPU applications as this is the earliest version of ROCm where MI350X
-has `explicit support <https://rocm.docs.amd.com/en/docs-7.0.0/reference/gpu-arch-specs.html>`_. Attempts to run
-workloads with earlier ROCm versions are unsuccessful on MI350X.
+MI350X GPUs require ROCm 7.0.1 or higher when running GPU applications as this is the earliest version of ROCm where MI350X
+has `certified support <https://rocm.docs.amd.com/en/docs-7.0.0/reference/gpu-arch-specs.html>`_.
 
 .. _MI325X-support:
 
@@ -40,8 +38,7 @@ MI325X
 ------------------------------------------------------------------------------------------------------------------------
 
 MI325X GPUs requires ROCm 6.3.1 or higher when running GPU applications, as this is the earliest version of ROCm where MI325X
-has `explicit support <https://rocm.docs.amd.com/en/docs-6.3.1/reference/gpu-arch-specs.html>`_. Attempts to run
-workloads with earlier ROCm versions are unsuccessful on MI325X.
+has `certified support <https://rocm.docs.amd.com/en/docs-6.3.1/reference/gpu-arch-specs.html>`_.
 
 MI300X
 ------------------------------------------------------------------------------------------------------------------------
