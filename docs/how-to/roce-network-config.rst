@@ -319,6 +319,14 @@ The first step is to log in to the switch and elevate your permissions so that y
 
       #. Run ``exit`` as a command at any time to leave configuration mode.
 
+   .. tab-item:: Juniper switches
+
+      #. Access your switch CLI with ssh.
+
+      #. Run ``edit`` or ``configure`` as a command to enter configuration mode.
+
+      #. Run ``exit`` as a command at any time to leave configuration mode.
+
 Enable RoCE support
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -334,6 +342,75 @@ Enable RoCE support
 
       Arista EOS supports RoCE communication by default. Instead, ensure the PFC for the RoCE traffic class is enabled
       on each port that handles RoCE traffic.
+
+   .. tab-item:: Juniper switches
+
+      To support RoCE communications in JunOS, enter configuration mode from the command line and set the following
+      configuration statements:
+
+      #. From the CLI, run ``start shell``.
+
+      #. Create a custom configuration file in ``/var/tmp``: ``vi /var/tmp/<file-name>.conf``.
+
+      #. Add the following policy statements to the file:
+
+         .. code-block:: shell
+                   
+            policy-options {
+                policy-statement lb-perpacket {
+                    then {
+                        load-balance per-packet;
+                    }
+                }
+            }
+            chassis {
+                maximum-ecmp 128;
+                fpc 0 {
+                    traffic-manager {
+                        buffer-monitor-enable;
+                    }
+                }
+            }
+            routing-options {
+                maximum-ecmp 128;
+                forwarding-table {
+                    export lb-perpacket;
+                    ecmp-fast-reroute;
+                }
+            }
+            forwarding-options {
+                hash-key {
+                    family inet {
+                        layer-3;
+                        layer-4;
+                    }
+                }
+                enhanced-hash-key {
+                    ecmp-dlb {
+                        flowlet {
+                            inactivity-interval 256;
+                            flowset-table-size 2048;
+                            reassignment {
+                                prob-threshold 3;
+                                quality-delta 6;
+                            }
+                        }
+                        ether-type {
+                            ipv4;
+                            ipv6;
+                        }
+                        sampling-rate 1000000;
+                    }
+                }
+            }        
+      
+      #. Save the file, then run ``exit`` to leave shell mode.
+
+      #. Run ``configure`` to enter configuration mode.
+
+      #. Run ``load merge /var/tmp/<file-name>.conf`` to load the configuration file.
+
+      #. Run ``show | compare`` to verify your changes, then ``commit`` to submit them. 
 
 Implement standard extended naming for switch interfaces
 ------------------------------------------------------------------------------------------------------------------------
@@ -371,7 +448,13 @@ required to match the port name to its physical label.
 
    .. tab-item:: Arista switches
 
-      Arista switches are pre-configured to use the standard extended naming convention, no additional action should be required.
+      Arista switches are pre-configured to use the standard extended naming convention, no additional action is required.
+
+   .. tab-item:: Juniper switches
+
+      Juniper switches are pre-configured to use the standard extended naming convention, no additional action is required.
+
+
 
 Verify all connected transceivers are detected
 ------------------------------------------------------------------------------------------------------------------------
@@ -401,7 +484,7 @@ Once all physical cluster cabling is complete, check that your switch transceive
 
       #. While in configuration mode, run ``show inventory``.
       
-      #. Verify all transceivers appears in the interface list.
+      #. Verify all transceivers appear in the interface list.
 
          .. code-block:: shell
 
@@ -413,6 +496,13 @@ Once all physical cluster cabling is complete, check that your switch transceive
               3    Arista Networks  DCS-7050TX-72Q
               4    Arista Networks  DCS-7050TX-72Q
               5    Arista Networks  DCS-7050TX-72Q
+
+   .. tab-item:: Juniper switches
+
+      #. While in configuration mode, run ``show chassis hardware`` or ``show interfaces diagnostics optics``.
+
+      #. Verify all transceivers appear in the interface list.
+
 
 Configure switch links
 ------------------------------------------------------------------------------------------------------------------------
@@ -484,6 +574,62 @@ If you require link training, enable it on both your NIC and switch OS.
          
             $ (config-if-Et1-32)# no shutdown
 
+   .. tab-item:: Juniper switches
+    
+      To enable link training in JunOS, enter configuration mode from the command line and set the following
+      configuration statements:
+
+      #. From the CLI, run ``start shell``.
+
+      #. Create a custom configuration file in ``/var/tmp``: ``vi /var/tmp/<file-name>.conf``.
+
+      #. Add the following policy statements to the file:
+
+         .. code-block:: shell
+             
+            interfaces {
+                et-0/0/0 {
+                    number-of-sub-ports 2;
+                    speed 400g;
+                    mtu 9216;
+                }
+                et-0/0/0:0 {
+                    mtu 9216;
+                    ether-options {
+                        no-flow-control;
+                    }
+                    unit 0 {
+                        family ethernet-switching {
+                            interface-mode access;
+                            vlan {
+                                members 200;
+                            }
+                        }
+                    }
+                }
+                et-0/0/0:1 {
+                    mtu 9216;
+                    ether-options {
+                        no-flow-control;
+                    }
+                    unit 0 {
+                        family ethernet-switching {
+                            interface-mode access;
+                            vlan {
+                                members 200;
+                            }
+                        }
+                    }
+                }
+
+      #. Save the file, then run ``exit`` to leave shell mode.
+
+      #. Run ``configure`` to enter configuration mode.
+
+      #. Run ``load merge /var/tmp/<file-name>.conf`` to load the configuration file.
+
+      #. Run ``show | compare`` to verify your changes, then ``commit`` to submit them. 
+
 .. Important::
   Some Arista switches are observed to not support autonegotiation or standalone link training on the edge ports (eth1, 
   eth2, eth31-34, eth63, eth64) when running older versions of Arista EOS. This causes a situation where you must either
@@ -493,7 +639,7 @@ If you require link training, enable it on both your NIC and switch OS.
   Since neither approach is ideal, the preferred solution is to update Arista EOS to version 4.33.0F or later, which 
   should allow standalone link training and autonegotiation on all ports.
 
-Link support training matrix
+Link training support matrix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Refer to the table below as a reference for whether standalone link training should be enabled or not based on your
@@ -717,6 +863,105 @@ run. Just make sure that the QoS configuration generated on the switch match tho
       priority-flow-control watchdog on detect-time 200
       priority-flow-control watchdog restore-time 400
       !
+
+For JunOS on Juniper switches, you can set the following configuration statements to implement the necessary QoS.
+
+.. dropdown:: Example - DCQCN configuration for a Juniper QFX5240 switch using JunOS
+
+  .. code-block:: shell
+
+    classifiers {
+        dscp mydscp {
+            forwarding-class CNP {
+                loss-priority low code-points 110000;
+            }
+            forwarding-class NO-LOSS {
+                loss-priority low code-points 011010;
+            }
+        }
+    }
+    
+    drop-profiles {
+        dp1 {
+            interpolate {
+                fill-level [ 45 90 ];
+                drop-probability [ 0 100 ];
+            }
+        }
+    }
+    
+    shared-buffer {
+        ingress {
+            buffer-partition lossless {
+                percent 80;
+            }
+            buffer-partition lossless-headroom {
+                percent 10;
+            }
+            buffer-partition lossy {
+                percent 10;
+            }
+        }
+        egress {
+            buffer-partition lossless {
+                percent 80;
+            }
+            buffer-partition lossy {
+                percent 10;
+            }
+        }
+    }
+    
+    forwarding-classes {
+        class CNP queue-num 3;
+        class NO-LOSS queue-num 4 no-loss pfc-priority 3;
+    }
+    
+    congestion-notification-profile {
+        cnp {
+            input {
+                dscp {
+                    code-point 011010 {
+                        pfc;
+                    }
+                }
+            }
+            output {
+                ieee-802.1 {
+                    code-point 011 {
+                        flow-control-queue 4;
+                    }                       
+                }
+            }
+        }
+    }
+    interfaces {
+        et-* {
+            congestion-notification-profile cnp;
+            scheduler-map sm1;
+            unit * {
+                classifiers {
+                    dscp mydscp;
+                }
+            }
+        }
+    }
+    scheduler-maps {
+        sm1 {
+            forwarding-class CNP scheduler s2-cnp;
+            forwarding-class NO-LOSS scheduler s1;
+        }
+    }
+    schedulers {
+        s1 {
+            drop-profile-map loss-priority any protocol any drop-profile dp1;
+            explicit-congestion-notification;
+        }
+        s2-cnp {
+            transmit-rate percent 5;
+            priority strict-high;
+        }
+    }
 
 .. _arp-flux-prevention:
 
