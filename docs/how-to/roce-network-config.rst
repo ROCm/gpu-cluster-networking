@@ -963,6 +963,8 @@ For JunOS on Juniper switches, you can set the following configuration statement
         }
     }
 
+.. _arp-flux-prevention:
+
 Backend network routing methods for preventing ARP flux
 ========================================================================================================================
 

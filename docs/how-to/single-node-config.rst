@@ -33,12 +33,31 @@ Before following the steps in the following sections, ensure you have completed 
 
 #. Disable NUMA balancing.
 
-   a. Run ``sudo sysctl kernel.numa_balancing=0``.
+   a. Run ``sudo sh -c 'echo 0 > /proc/sys/kernel/numa_balancing'``.
 
    b. To verify NUMA balancing is disabled, run ``cat /proc/sys/kernel/numa_balancing`` and confirm that ``0`` is
       returned.
 
-   c. See :ref:`Disable NUMA auto-balancing <mi300x-rccl-disable-numa>` for more information.
+   This disables NUMA balancing during the current system session and does not persist through reboot. To permanently
+   disable NUMA balancing, use the grub boot loader settings.
+   
+   a. Open ``/etc/default/grub`` for editing. 
+
+   b. Locate the line that starts with ``GRUB_CMDLINE_LINUX_DEFAULT`` and add ``numa_balancing=disable`` inside the
+      double quotes, separated from the other values by a space.
+
+      .. code-block:: shell
+
+         GRUB_CMDLINE_LINUX_DEFAULT="quiet splash numa_balancing=disable"
+
+   c. Depending on your system OS, run ``sudo update-grub``, ``sudo grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg``,
+      or ``sudo grub2-mkconfig -o /boot/grub2/grub.cfg`` then reboot.
+
+   d. Run ``sudo cat /proc/cmdline`` to verify grub command line settings. 
+
+   It's a common practice to first disable NUMA balancing on a temporary basis , then make it a permanent grub setting
+   once you verify the setting contributes to better peformance. See :ref:`Disable NUMA auto-balancing
+   <mi300x-rccl-disable-numa>` for more information.
 
 #. Disable PCI ACS (access control services). Run the `disable-acs-script
    <https://github.com/ROCm/cluster-networking/blob/main/general_scripts/dis_acs.sh>`_ on all PCIe devices supporting
@@ -54,9 +73,12 @@ Before following the steps in the following sections, ensure you have completed 
 
    a. Add ``iommu=pt``, ``pci=realloc=off``, and ``pci=bfsort`` to the ``GRUB_CMDLINE_LINUX_DEFAULT`` entry in ``/etc/default/grub``.
 
-   b. Run ``sudo update-grub``, then reboot.
+   b. Depending on your system OS, run ``sudo update-grub``, ``sudo grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg``,
+      or ``sudo grub2-mkconfig -o /boot/grub2/grub.cfg`` then reboot.
 
-   c. See `GRUB settings
+   c. Run ``sudo cat /proc/cmdline`` to verify grub command line settings. 
+
+   d. See `GRUB settings
       <https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/mi300x.html#mi300x-grub-settings>`_
       and :ref:`rocm-install-on-linux:multi-gpu` for more information.
 
@@ -87,6 +109,8 @@ where it may not be obvious.
 
    Gather all the PCIe addresses for your GPUs, NICs, and switches in advance and take note of them so you have them on
    hand for next steps.
+
+.. _PCie-device-speed-width:
 
 Check PCIe device speed and width
 ------------------------------------------------------------------------------------------------------------------------
