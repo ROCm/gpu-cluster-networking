@@ -1,6 +1,8 @@
 "Switch OS","cable type","port speed","link training","BRCM NIC link training"
 "Arista EOS >= 4.33.0F ","optics ","400 - no autoneg ","off  ","off "
 "Arista EOS >= 4.33.0F ","DAC ","400 - no autoneg ","on ","on "
+"JunOS ","optics ","400 - no autoneg ","off  ","off "
+"JunOS ","DAC ","400 - no autoneg ","on ","on "
 "Dell Sonic ","optics ","400 - no autoneg ","off ","off "
 "Dell Sonic ","DAC ","400 - no autoneg ","on ","on "
 "Dell OS10 ","optics ","400 - no autoneg ","N/A ","off "
