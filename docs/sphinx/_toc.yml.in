@@ -24,5 +24,3 @@ subtrees:
     title: Hardware support
   - file: reference/cluster-design
     title: Cluster design
-  - url: https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/other/instinct-mi300-series-cluster-reference-guide.pdf
-    title: MI300 series cluster architecture
