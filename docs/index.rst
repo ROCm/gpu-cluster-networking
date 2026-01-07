@@ -34,7 +34,6 @@ optimal speed and bandwidth during operation.
 
       * :doc:`Hardware support <reference/hardware-support>`
       * :doc:`Cluster design <reference/cluster-design>`
-      * `MI300 Series Cluster Architecture (External) <https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/other/instinct-mi300-series-cluster-reference-guide.pdf>`_
 
 .. note::
 
