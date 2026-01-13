@@ -14,7 +14,7 @@ Cluster architecture and network design
       * `128-1028 GPU Reference Cluster Design <../_static/cluster/128-1024-gpu-reference-cluster-design.pdf>`_ 
       * `1024-8192 GPU Reference Cluster Design <../_static/cluster/1024-8192-gpu-reference-cluster-design.pdf>`_
 
-   .. grid-item-card:: Reference Network Design Architecture 3XX (PPT)
+   .. grid-item-card:: Reference Network Design Architecture 3XX
 
       * `3XX-2K Reference Network Design <../_static/network/3XX-2K-reference-network-design.pdf>`_
       * `3XX-4K Reference Network Design <../_static/network/3XX-4K-reference-network-design.pdf>`_
