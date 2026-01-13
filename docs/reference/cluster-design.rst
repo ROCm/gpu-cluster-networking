@@ -7,7 +7,7 @@ Cluster architecture and network design
 ************************************************************************************************************************
 
 .. grid:: 2
-   :gutter: 3
+   :gutter: 2
 
    .. grid-item-card:: Reference Cluster Design Architecture MI300X/MI325
 
@@ -20,12 +20,4 @@ Cluster architecture and network design
       * `3XX-4K Reference Network Design <../_static/network/3XX-4K-reference-network-design.pdf>`_
       * `3XX-6K Reference Network Design <../_static/network/3XX-6K-reference-network-design.pdf>`_
       * `3XX-8K Reference Network Design <../_static/network/3XX-8K-reference-network-design.pdf>`_
-      * `355-4MW Reference Network Design <../_static/network/355-4MW-PPT-reference-network-design.pdf>`_ 
-
-   .. grid-item-card:: Reference Network Design Architecture 3XX (DOC)
-
-      * `3XX-2K Reference Network Design <../_static/network/3XX-2K-DOC-reference-network-design.pdf>`_
-      * `3XX-4K Reference Network Design <../_static/network/3XX-4K-DOC-reference-network-design.pdf>`_
-      * `3XX-6K Reference Network Design <../_static/network/3XX-6K-DOC-reference-network-design.pdf>`_
-      * `3XX-8K Reference Network Design <../_static/network/3XX-8K-DOC-reference-network-design.pdf>`_
-      * `355-4MW Reference Network Design <../_static/network/355-4MW-DOC-reference-network-design.pdf>`_ 
+      * `355-4MW Reference Network Design <../_static/network/355-4MW-PPT-reference-network-design.pdf>`_
