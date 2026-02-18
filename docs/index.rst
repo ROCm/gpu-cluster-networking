@@ -6,18 +6,14 @@
 Cluster network performance validation for AMD Instinct accelerators
 ********************************************************************
 
-When running HPC and AI applications in a cluster network environment,
-performance is only as fast as the slowest individual node in the network. To
-achieve optimal performance, each server must be configured for maximum data
-transfer rates and bandwidth utilization based on the available hardware. It is
-crucial to validate both host and device performance in single-node and
-multi-node environments using the appropriate benchmarking tools.
+When running HPC and AI applications in a cluster network environment, performance is only as fast as the slowest
+individual node in the network. To achieve optimal performance, each server must be configured for maximum data transfer
+rates and bandwidth utilization based on the available hardware. It is crucial to validate both host and device
+performance in single-node and multi-node environments using the appropriate benchmarking tools.
 
-Refer to the relevant networking guides for step-by-step instructions on
-validating network configurations in single-node and multi-node environments.
-These guides cover system settings, device configurations, networking tools, and
-performance tests to ensure AMD Instinct™-powered GPU clusters achieve
-optimal speed and bandwidth during operation.
+Refer to the relevant networking guides for step-by-step instructions on validating network configurations in
+single-node and multi-node environments. These guides cover system settings, device configurations, networking tools,
+and performance tests to ensure AMD Instinct™-powered GPU clusters achieve optimal speed and bandwidth during operation.
 
 .. grid:: 2
    :gutter: 3
@@ -33,14 +29,15 @@ optimal speed and bandwidth during operation.
    .. grid-item-card:: Reference
 
       * :doc:`Hardware support <reference/hardware-support>`
-      * :doc:`Cluster design <reference/cluster-design>`
+    
+   .. grid-item-card:: Design
+
+      * :doc:`MI3XX <design/mi3xx>`
 
 .. note::
 
-   AMD Instinct systems vary in form and configuration, and cluster design
-   adds additional layers of complexity. The guidelines in this
-   documentation are written at a high level for broad applicability across
-   diverse environments. While certain scenarios may include specific hardware
-   examples, your setup will likely differ in terms of GPUs and CPUs per server,
-   firmware versions, and network interconnects. Adjustments might be necessary
-   to align with your particular configuration.
+   AMD Instinct systems vary in form and configuration, and cluster design adds additional layers of complexity. The
+   guidelines in this documentation are written at a high level for broad applicability across diverse environments.
+   While certain scenarios may include specific hardware examples, your setup will likely differ in terms of GPUs and
+   CPUs per server, firmware versions, and network interconnects. Adjustments might be necessary to align with your
+   particular configuration.
