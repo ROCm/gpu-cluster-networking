@@ -299,7 +299,7 @@ The first step is to log in to the switch and elevate your permissions so that y
 
 .. tab-set::
 
-   .. tab-item:: Dell switches
+   .. tab-item:: Dell
       
       #. Access your switch CLI with ssh.
 
@@ -309,7 +309,7 @@ The first step is to log in to the switch and elevate your permissions so that y
 
       #. Run ``exit`` as a command at any time to leave configuration mode.
 
-   .. tab-item:: Arista switches
+   .. tab-item:: Arista
 
       #. Access your switch CLI with ssh.
 
@@ -319,7 +319,7 @@ The first step is to log in to the switch and elevate your permissions so that y
 
       #. Run ``exit`` as a command at any time to leave configuration mode.
 
-   .. tab-item:: Juniper switches
+   .. tab-item:: Juniper
 
       #. Access your switch CLI with ssh.
 
@@ -327,23 +327,36 @@ The first step is to log in to the switch and elevate your permissions so that y
 
       #. Run ``exit`` as a command at any time to leave configuration mode.
 
+   .. tab-item:: Cisco
+
+      #. Access your switch CLI with ssh.
+
+      #. Run ``configure`` as a command to enter configuration mode.
+
+      #. Run ``exit`` as a command at any time to leave configuration mode.
+
+
 Enable RoCE support
 ------------------------------------------------------------------------------------------------------------------------
 
+To enable RoCE support on your switch, you may need to enable a specific RoCE mode or set up QoS policies to prioritize
+RoCE traffic. The exact steps depend on the switch vendor and model, but general instructions for Dell, Arista, Juniper,
+and Cisco switches are provided below.
+
 .. tab-set::
 
-   .. tab-item:: Dell switches
+   .. tab-item:: Dell
 
       #. While in configuration mode, run ``roce enable`` as a command.
 
       #. Reboot the switch when or if prompted.
 
-   .. tab-item:: Arista switches
+   .. tab-item:: Arista
 
       Arista EOS supports RoCE communication by default. Instead, ensure the PFC for the RoCE traffic class is enabled
       on each port that handles RoCE traffic.
 
-   .. tab-item:: Juniper switches
+   .. tab-item:: Juniper
 
       To support RoCE communications in JunOS, enter configuration mode from the command line and set the following
       configuration statements:
@@ -412,6 +425,11 @@ Enable RoCE support
 
       #. Run ``show | compare`` to verify your changes, then ``commit`` to submit them. 
 
+   .. tab-item:: Cisco
+
+      Cisco NX-OS supports RoCE communication by default. Instead, ensure the PFC for the RoCE traffic class is enabled
+      on each port that handles RoCE traffic.
+
 Implement standard extended naming for switch interfaces
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -426,7 +444,7 @@ required to match the port name to its physical label.
 
 .. tab-set::
 
-   .. tab-item:: Dell switches
+   .. tab-item:: Dell
 
       #. While in configuration mode, run ``interface-naming standard extended`` as a command.
 
@@ -446,15 +464,19 @@ required to match the port name to its physical label.
             Eth1/65      N/A                                     N/A               N/A               N/A               N/A               False
             Eth1/66      N/A                                     N/A               N/A               N/A               N/A               False
 
-   .. tab-item:: Arista switches
+   .. tab-item:: Arista
 
       Arista switches are pre-configured to use the standard extended naming convention, no additional action is required.
 
-   .. tab-item:: Juniper switches
+   .. tab-item:: Juniper
 
-      Juniper switches are pre-configured to use the standard extended naming convention, no additional action is required.
+      Juniper switches are pre-configured to use the standard extended naming convention, no additional action is
+      required.
 
+   .. tab-item:: Cisco
 
+      Cisco switches are pre-configured to use the standard extended naming convention, no additional action is
+      required.
 
 Verify all connected transceivers are detected
 ------------------------------------------------------------------------------------------------------------------------
@@ -463,7 +485,7 @@ Once all physical cluster cabling is complete, check that your switch transceive
 
 .. tab-set::
 
-   .. tab-item:: Dell switches
+   .. tab-item:: Dell
 
       #. While in configuration mode, run ``show interface transceiver summary | no-more``.
 
@@ -480,7 +502,7 @@ Once all physical cluster cabling is complete, check that your switch transceive
             Eth1/4       QSFP56-DD 400GBASE-SR8-AEC-3.0M         DELL EMC          DH11M             CN0F9KR70CQ0026   N/A               True
             ...
 
-   .. tab-item:: Arista switches
+   .. tab-item:: Arista
 
       #. While in configuration mode, run ``show inventory``.
       
@@ -497,12 +519,26 @@ Once all physical cluster cabling is complete, check that your switch transceive
               4    Arista Networks  DCS-7050TX-72Q
               5    Arista Networks  DCS-7050TX-72Q
 
-   .. tab-item:: Juniper switches
+   .. tab-item:: Juniper
 
       #. While in configuration mode, run ``show chassis hardware`` or ``show interfaces diagnostics optics``.
 
       #. Verify all transceivers appear in the interface list.
 
+   .. tab-item:: Cisco
+
+      #. From the command line, run ``show interface transceiver | include Eth|type``.
+
+      #. Verify all transceivers appear in the interface list.
+
+         .. code-block:: shell
+
+            Ethernet1/1/1    
+            Ethernet1/1/2    
+            Ethernet1/2/1    
+            Ethernet1/2/2    
+            Ethernet1/3/1
+            ....        
 
 Configure switch links
 ------------------------------------------------------------------------------------------------------------------------
@@ -521,7 +557,7 @@ If you require link training, enable it on both your NIC and switch OS.
 
       ``niccli -dev 1 nvm -setoption link_training -value [0|1] -scope 0``   
    
-   .. tab-item:: Dell switches
+   .. tab-item:: Dell
 
       If your switch ports are connected to non-DAC cables you should disable link training:
 
@@ -561,7 +597,7 @@ If you require link training, enable it on both your NIC and switch OS.
          
             $ (config-if-range-eth**)# standalone-link-training    
 
-   .. tab-item:: Arista switches
+   .. tab-item:: Arista
 
       #. While in configuration mode, run ``interface Ethernet`` as a command to select an interface range such as
          ``1-32``.
@@ -574,7 +610,7 @@ If you require link training, enable it on both your NIC and switch OS.
          
             $ (config-if-Et1-32)# no shutdown
 
-   .. tab-item:: Juniper switches
+   .. tab-item:: Juniper
     
       To enable link training in JunOS, enter configuration mode from the command line and set the following
       configuration statements:
@@ -630,6 +666,20 @@ If you require link training, enable it on both your NIC and switch OS.
 
       #. Run ``show | compare`` to verify your changes, then ``commit`` to submit them. 
 
+   .. tab-item:: Cisco
+
+      If connecting a 400 gbps NIC to an 800 gbps switch interface, create a breakout of the switch interface to 2 x 400
+      gbps mode using the ``interface breakout module`` NX-OS command while in configuration mode.
+      
+      #. Run ``configure`` to enter configuration mode.
+      
+      #. Run ``interface breakout module 1 port <port range> map 400g-2x`` to split the 800G interface across two 400G
+         interfaces for the defined port range, such as ``1-64``.
+      
+      #. Run ``int eth <int range>`` to select the interface range, such as ``1/1-64``.
+      
+      #. Run ``no shutdown``.
+
 .. Important::
   Some Arista switches are observed to not support autonegotiation or standalone link training on the edge ports (eth1, 
   eth2, eth31-34, eth63, eth64) when running older versions of Arista EOS. This causes a situation where you must either
@@ -649,6 +699,11 @@ switch OS and cable type.
    :file: ../data/roce-config/link-matrix.csv
    :widths: 70, 30, 40, 40, 70
    :header-rows: 1
+
+.. Note::
+   If you are using a Cisco switch running NX-OS with DAC cables, leave link training disabled on NIC and switch 
+   initially. If you find links aren't coming up, enable link training using the instructions provided in the previous
+   section.
 
 Match switch QoS configuration to NIC for DCQCN
 ------------------------------------------------------------------------------------------------------------------------
@@ -963,6 +1018,63 @@ For JunOS on Juniper switches, you can set the following configuration statement
         }
     }
 
+For NX-OS on Cisco switches, you can set the following configuration statements to implement the necessary QoS.
+
+.. dropdown:: Example - DCQCN configuration for a Cisco N9364E-SG2-O switch using NX-OS
+
+  .. code-block:: shell
+
+    !     
+    policy-map type network-qos qos_network    
+      class type network-qos c-8q-nq3    
+        mtu 9216    
+        pause pfc-cos 3    
+      class type network-qos c-8q-nq-default    
+        mtu 9216    
+    !    
+    class-map type qos match-any CNP    
+      match dscp 48    
+    class-map type qos match-any ROCEv2    
+      match dscp 26    
+    policy-map type qos QOS_CLASSIFICATION    
+      class ROCEv2    
+        set qos-group 3    
+      class CNP    
+        set qos-group 7    
+      class class-default    
+        set qos-group 0    
+    !    
+    policy-map type queuing QOS_EGRESS_PORT    
+      class type queuing c-out-8q-q6    
+        bandwidth remaining percent 0    
+      class type queuing c-out-8q-q5    
+        bandwidth remaining percent 0    
+      class type queuing c-out-8q-q4    
+        bandwidth remaining percent 0    
+      class type queuing c-out-8q-q3    
+        bandwidth remaining percent 50    
+        random-detect minimum-threshold 950 kbytes maximum-threshold 3000 kbytes drop-probability 7 weight 0 ecn    
+      class type queuing c-out-8q-q2    
+        bandwidth remaining percent 0    
+      class type queuing c-out-8q-q1    
+        bandwidth remaining percent 0    
+      class type queuing c-out-8q-q-default    
+        bandwidth remaining percent 50    
+      class type queuing c-out-8q-q7    
+        priority level 1    
+    system qos    
+      service-policy type network-qos qos_network    
+      service-policy type queuing output QOS_EGRESS_PORT    
+    !    
+    interface Ethernet1/1/1 - 2    
+      mtu 9216    
+      priority-flow-control mode on
+      priority-flow-control watch-dog-interval on    
+      service-policy type qos input QOS_CLASSIFICATION    
+      ip address 10.1.0.1/31    
+      no shutdown     
+    !
+ 
 .. _arp-flux-prevention:
 
 Backend network routing methods for preventing ARP flux
@@ -1520,7 +1632,7 @@ The requirements for point-to-point routing are:
               table: 108
         version: 2
 
-.. dropdown:: Example - Switch configuration for point-to-point /31 IPV4 routing (applicable for Sonic, EOS, and others)
+.. dropdown:: Example - Switch configuration for point-to-point /31 IPV4 routing (applicable for Sonic, EOS, NX-OS, and others)
    
    .. code-block:: shell
 
