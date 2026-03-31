@@ -156,7 +156,7 @@ RDMA Perftest errors
       - Run ``sudo usermod -a -G video,render $LOGNAME``, exit the shell, and log in again. Some systems may require a
         reboot after running these commands. 
   * - Host memory RDMA low performance 
-    - Investigate PCIe links for :ref:`downgraded speed/width <PCie-device-speed-width>` or :ref:`BIOS misconfiguration <BIOS-misconfiguration>`-particularly xGMI width and memory interleaving.
+    - Investigate PCIe links for :ref:`downgraded speed/width <PCie-device-speed-width>` or :ref:`BIOS misconfiguration <BIOS-misconfiguration>`-particularly XGMI width and memory interleaving.
       
       - Check the :ref:`system BIOS settings for MI300X <BIOS-misconfiguration>`. ``XGMI force link width`` should be set to 2. Memory interleaving should be set to ``Auto``.
   * - GPU RDMA low performance
