@@ -2,6 +2,19 @@
 .vscode
 build
 
+# Local configuration file for esbonio extension
+pyproject.toml
+
+# AI assistant tool directories (personal, not project source)
+.claude/
+.cline/
+.cline_storage/
+.codex/
+.cursor/
+
+# Skills are a local tool dependency, not project source
+skills/
+
 # documentation artifacts
 _build/
 _images/
