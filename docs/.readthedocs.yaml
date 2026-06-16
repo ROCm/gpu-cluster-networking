@@ -15,4 +15,4 @@ python:
 sphinx:
   configuration: docs/conf.py
 
-formats: [htmlzip, pdf]
+formats: [htmlzip]

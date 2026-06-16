@@ -3,7 +3,7 @@
    :keywords: network validation, cluster, cluster design, cluster architecture, cluster network
 
 ************************************************************************************************************************
-Cluster architecture and network design for AMD Instinct MI3XX accelerators
+AMD Instinct MI3XX Reference Design
 ************************************************************************************************************************
 
 This document provides a common reference for designing GPU cluster networks using AMD Instinct MI300X, MI325X, MI350X,
@@ -42,13 +42,13 @@ Rail networks can provide better latency for traffic within the same rail, enabl
 However, traffic that needs to cross rails can experience higher latency, which can be a bottleneck in large clusters
 with high cross-rail traffic.
 
-.. image:: ../data/basic-network-topology-design-examples/rail-network-traversals.png
+.. image:: ./data/basic-network-topology-design-examples/rail-network-traversals.png
    :alt: Example of benefits and limitations of rail network traversals 
 
 Fat tree networks handle cross-rank traffic better, but may have higher latency for traffic that could have been
 contained within a single rail in a rail network.
 
-.. image:: ../data/basic-network-topology-design-examples/cross-rank-traffic-tree.png
+.. image:: ./data/basic-network-topology-design-examples/cross-rank-traffic-tree.png
    :alt: Example of benefits and limitations of fat tree network traversals
 
 The choice between the two often depends on the specific workload and communication patterns of the applications being
@@ -68,7 +68,7 @@ The 2-tier rail network design enables large, scalable unit sizes suitable for l
 efficiency for workloads that utilize ring-based collectives, though it also results in higher infrastructure costs due
 to the need for additional networking hardware.
 
-.. image:: ../data/basic-network-topology-design-examples/2-tier-rail-network.png
+.. image:: ./data/basic-network-topology-design-examples/2-tier-rail-network.png
    :alt: 2-tier rail network diagram
 
 2-tier tree network
@@ -78,7 +78,7 @@ The 2-tier tree network design is efficient for small workloads or replicas and 
 proper planning. It also has the potential to reduce overall infrastructure costs, while its design helps limit the
 blast radius compared to rail networks.
 
-.. image:: ../data/basic-network-topology-design-examples/2-tier-tree-network.png
+.. image:: ./data/basic-network-topology-design-examples/2-tier-tree-network.png
    :alt: 2-tier tree network diagram
 
 3-tier rail TH5/J3 network
@@ -100,7 +100,7 @@ rail, but retains the primary characteristics of tree networks.
 The 3-tier rail optimized network design allows for massive scalable unit sizes and delivers the best ring-based
 collective performance at scale, though this comes with the trade-off of weaker any-to-any communication performance.
 
-.. image:: ../data/basic-network-topology-design-examples/3-tier-rail-optimized-network.png
+.. image:: ./data/basic-network-topology-design-examples/3-tier-rail-optimized-network.png
    :alt: 3-tier rail optimized network diagram
 
 3-tier tree network
@@ -110,7 +110,7 @@ The 3-tier tree network design allows for massive cluster sizes and delivers exc
 making it well-suited for large deployments that need strong, predictable connectivity. This architecture is
 particularly effective for campus-style environments, where broad distribution and high performance are both required.
 
-.. image:: ../data/basic-network-topology-design-examples/3-tier-tree-network.png
+.. image:: ./data/basic-network-topology-design-examples/3-tier-tree-network.png
    :alt: 3-tier tree optimized network diagram
 
 3-tier hybrid rail network
@@ -120,7 +120,7 @@ The 3-tier hybrid rail network design allows for massive cluster sizes with larg
 collectives while still maintaining solid any-to-any performance for large jobs. These characteristics also make it
 well-suited for campus-style deployments that balance scalability with broad connectivity requirements.
 
-.. image:: ../data/basic-network-topology-design-examples/3-tier-hybrid-rail-network.png
+.. image:: ./data/basic-network-topology-design-examples/3-tier-hybrid-rail-network.png
    :alt: 3-tier hybrid rail network diagram
 
 3-tier fully scheduled rail network
@@ -130,7 +130,7 @@ The 3-Tier fully scheduled rail network designuses medium-sized scalable units a
 performance thanks to deep buffers and scheduled fabric, though technical limitations restrict the recommended cluster
 size to roughly 32,000 GPUs.
 
-.. image:: ../data/basic-network-topology-design-examples/3-tier-fully-scheduled-rail-network.png
+.. image:: ./data/basic-network-topology-design-examples/3-tier-fully-scheduled-rail-network.png
    :alt: 3-tier fully scheduled rail network diagram
 
 Scaling networks
@@ -141,18 +141,18 @@ requirements. For a 2-tier tree network, spine switches do not need to be added 
 as all rail/rank traffic occurs at the unit-level. In a 2-tier rail network, spine switches are needed at deployment to
 connect rails at any scalable unit number.
 
-.. image:: ../data/basic-network-topology-design-examples/2-tier-network-backend-scaling.png
+.. image:: ./data/basic-network-topology-design-examples/2-tier-network-backend-scaling.png
     :alt: Example of network backend scaling for 2-tier network design
 
 In a 3-tier network, a tree design does not require a super spine until a super-scalable unit is deployed.
 
-.. image:: ../data/basic-network-topology-design-examples/3-tier-network-backend-scaling.png
+.. image:: ./data/basic-network-topology-design-examples/3-tier-network-backend-scaling.png
     :alt: Example of network backend scaling for 3-tier network design
 
 This holds true for hybrid rail as well, where the super spine is only needed at super-scalable unit deployments, but a
 fully scheduled rail network requires a super spine from the initial deployment.
 
-.. image:: ../data/basic-network-topology-design-examples/3-tier-network-backend-deploy-rail.png
+.. image:: ./data/basic-network-topology-design-examples/3-tier-network-backend-deploy-rail.png
     :alt: Example of network backend scaling for 3-tier network design
 
 Network subscription
@@ -388,7 +388,7 @@ with AMD Architecture as required.
 
 **Single switch design - 8-128 GPU (1-16 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/8-128-gpu-single-sw-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/8-128-gpu-single-sw-design.png
    :alt: 8-128 GPU single switch design diagram
 
 256 - 864 GPU topology design examples scheduled fabrics
@@ -396,32 +396,32 @@ with AMD Architecture as required.
 
 **Tree design - 129-256 GPU (17-32 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/129-256-gpu-tree-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/129-256-gpu-tree-design.png
    :alt: 129-256 GPU tree design diagram
 
 **Rail design - 129-288 GPU (17-36 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/129-288-gpu-rail-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/129-288-gpu-rail-design.png
    :alt: 129-288 GPU rail design diagram
 
 **Tree design - 257-512 GPU (33-64 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/257-512-gpu-tree-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/257-512-gpu-tree-design.png
    :alt: 257-512 GPU tree design diagram
 
 **Rail design - 289-576 GPU (37-72 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/289-576-gpu-rail-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/289-576-gpu-rail-design.png
    :alt: 289-576 GPU rail design diagram
 
 **Tree design - 513-768 GPU (65-96 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/513-768-gpu-tree-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/513-768-gpu-tree-design.png
    :alt: 513-768 GPU tree design diagram
 
 **Rail design - 577-864 GPU (73-108 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/577-864-gpu-rail-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/577-864-gpu-rail-design.png
    :alt: 577-864 GPU rail design diagram
 
 1K GPU topology design examples scheduled fabrics
@@ -429,12 +429,12 @@ with AMD Architecture as required.
 
 **Tree design - 128-1024 GPU (16-128 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/128-1024-gpu-tree-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/128-1024-gpu-tree-design.png
    :alt: 128-1024 GPU tree design diagram
 
 **Rail design - 128-1152 GPU (16-144 nodes)**
 
-.. image:: ../data/1k-gpu-topology-design-examples/128-1152-gpu-rail-design.png
+.. image:: ./data/1k-gpu-topology-design-examples/128-1152-gpu-rail-design.png
    :alt: 128-1152 GPU rail design diagram
 
 2K GPU topology design examples scheduled fabrics
@@ -442,22 +442,22 @@ with AMD Architecture as required.
 
 **Tree design - 2048 GPU (256 Nodes)**
 
-.. image:: ../data/2k-gpu-topology-design-examples/network-diagram-2048GPU-tree-design.png
+.. image:: ./data/2k-gpu-topology-design-examples/network-diagram-2048GPU-tree-design.png
    :alt: Network diagram - 2048 GPU (256 Nodes), Tree design
 
 **Tree scalable unit - 2048 GPU (256 Nodes)**
 
-.. image:: ../data/2k-gpu-topology-design-examples/network-diagram-2048GPU-tree-scalable-unit.png
+.. image:: ./data/2k-gpu-topology-design-examples/network-diagram-2048GPU-tree-scalable-unit.png
    :alt: Network diagram - 2048 GPU (256 Nodes), Tree scalable unit
 
 **Rail design - 2048-2304 GPU (256-288 Nodes)**
 
-.. image:: ../data/2k-gpu-topology-design-examples/network-diagram-2048-2304GPU-rail-design.png
+.. image:: ./data/2k-gpu-topology-design-examples/network-diagram-2048-2304GPU-rail-design.png
    :alt: Network diagram - 2048-2304 GPU (256-288 Nodes), Rail design
 
 **Rail scalable unit - 2048-2304 GPU (256-288 Nodes)**
 
-.. image:: ../data/2k-gpu-topology-design-examples/network-diagram-2048-2304GPU-rail-scalable-unit.png
+.. image:: ./data/2k-gpu-topology-design-examples/network-diagram-2048-2304GPU-rail-scalable-unit.png
    :alt: Network diagram - 2048-2304 GPU (256-288 Nodes), Rail scalable unit
 
 2K GPU topology design examples 51.2T
@@ -465,22 +465,22 @@ with AMD Architecture as required.
 
 **Tree design - 2072 GPU (259 Nodes)**
 
-.. image:: ../data/2k-gpu-topology-design-examples/network-diagram-2072GPU-tree-design.png
+.. image:: ./data/2k-gpu-topology-design-examples/network-diagram-2072GPU-tree-design.png
    :alt: Network diagram - 2072 GPU (259 Nodes), Tree design
 
 **Tree scalable unit - 2072 GPU (259 Nodes)**
 
-.. image:: ../data/2k-gpu-topology-design-examples/network-diagram-2072GPU-tree-scalable-unit.png
+.. image:: ./data/2k-gpu-topology-design-examples/network-diagram-2072GPU-tree-scalable-unit.png
    :alt: Network diagram - 2072 GPU (259 Nodes), Tree scalable unit
 
 **Rail design - 2080 GPU (260 Nodes)**
 
-.. image:: ../data/2k-gpu-topology-design-examples/network-diagram-2080GPU-rail-design.png
+.. image:: ./data/2k-gpu-topology-design-examples/network-diagram-2080GPU-rail-design.png
    :alt: Network diagram - 2080 GPU (260 Nodes), Rail design
 
 **Rail scalable unit - 2080 GPU (260 Nodes)**
 
-.. image:: ../data/2k-gpu-topology-design-examples/network-diagram-2080GPU-rail-scalable-unit.png
+.. image:: ./data/2k-gpu-topology-design-examples/network-diagram-2080GPU-rail-scalable-unit.png
    :alt: Network diagram - 2080 GPU (260 Nodes), Rail scalable unit
 
 4K GPU topology design examples scheduled fabrics
@@ -488,22 +488,22 @@ with AMD Architecture as required.
 
 **Tree design - 4096 GPU (512 Nodes)**
 
-.. image:: ../data/4k-gpu-toplogy-design-examples/network-diagram-4096GPU-tree-design.png
+.. image:: ./data/4k-gpu-toplogy-design-examples/network-diagram-4096GPU-tree-design.png
    :alt: Network diagram - 4096 GPU (512 Nodes), Tree design
 
 **Tree scalable unit - 4096 GPU (512 Nodes)**
 
-.. image:: ../data/4k-gpu-toplogy-design-examples/network-diagram-4096GPU-tree-scalable-unit.png
+.. image:: ./data/4k-gpu-toplogy-design-examples/network-diagram-4096GPU-tree-scalable-unit.png
    :alt: Network diagram - 4096 GPU (512 Nodes), Tree scalable unit
 
 **Rail design - 4096-4608 GPU (512-576 Nodes)**
 
-.. image:: ../data/4k-gpu-toplogy-design-examples/network-diagram-4096-4608GPU-rail-design.png
+.. image:: ./data/4k-gpu-toplogy-design-examples/network-diagram-4096-4608GPU-rail-design.png
    :alt: Network diagram - 4096-4608 GPU (512-576 Nodes), Rail design
 
 **Rail scalable unit - 4096-4608 GPU (512-576 Nodes)**
 
-.. image:: ../data/4k-gpu-toplogy-design-examples/network-diagram-4096-4608GPU-rail-scalable-unit.png
+.. image:: ./data/4k-gpu-toplogy-design-examples/network-diagram-4096-4608GPU-rail-scalable-unit.png
    :alt: Network diagram - 4096-4608 GPU (512-576 Nodes), Rail scalable unit
 
 4K GPU topology design examples 51.2T
@@ -511,22 +511,22 @@ with AMD Architecture as required.
 
 **Tree design - 4144 GPU (518 Nodes)**
 
-.. image:: ../data/4k-gpu-toplogy-design-examples/network-diagram-4144GPU-tree-design.png
+.. image:: ./data/4k-gpu-toplogy-design-examples/network-diagram-4144GPU-tree-design.png
    :alt: Network diagram - 4144 GPU (518 Nodes), Tree design
 
 **Tree scalable unit - 4144 GPU (518 Nodes)**
 
-.. image:: ../data/4k-gpu-toplogy-design-examples/network-diagram-4144GPU-tree-scalable-unit.png
+.. image:: ./data/4k-gpu-toplogy-design-examples/network-diagram-4144GPU-tree-scalable-unit.png
    :alt: Network diagram - 4144 GPU (518 Nodes), Tree scalable unit
 
 **Rail design - 4104 GPU (513 Nodes)**
 
-.. image:: ../data/4k-gpu-toplogy-design-examples/network-diagram-4104GPU-rail-design.png
+.. image:: ./data/4k-gpu-toplogy-design-examples/network-diagram-4104GPU-rail-design.png
    :alt: Network diagram - 4104 GPU (518 Nodes), Rail design
 
 **Rail scalable unit - 4104 GPU (513 Nodes)**
 
-.. image:: ../data/4k-gpu-toplogy-design-examples/network-diagram-4104GPU-rail-scalable-unit.png
+.. image:: ./data/4k-gpu-toplogy-design-examples/network-diagram-4104GPU-rail-scalable-unit.png
    :alt: Network diagram - 4104 GPU (518 Nodes), Rail scalable unit
 
 6K GPU topology design examples scheduled fabrics
@@ -534,22 +534,22 @@ with AMD Architecture as required.
 
 **Tree design - 6016 GPU (752 Nodes)**
 
-.. image:: ../data/6k-gpu-toplogy-design-examples/network-diagram-6016GPU-tree-design.png
+.. image:: ./data/6k-gpu-toplogy-design-examples/network-diagram-6016GPU-tree-design.png
    :alt: Network diagram - 6016 GPU (752 Nodes), Tree design
 
 **Tree scalable unit - 6016 GPU (752 Nodes)**
 
-.. image:: ../data/6k-gpu-toplogy-design-examples/network-diagram-6016GPU-tree-scalable-unit.png
+.. image:: ./data/6k-gpu-toplogy-design-examples/network-diagram-6016GPU-tree-scalable-unit.png
    :alt: Network diagram - 6016 GPU (752 Nodes), Tree scalable unit
 
 **Rail design - 6144-6912 GPU (768-864 Nodes)**
 
-.. image:: ../data/6k-gpu-toplogy-design-examples/network-diagram-6144-6912GPU-rail-design.png
+.. image:: ./data/6k-gpu-toplogy-design-examples/network-diagram-6144-6912GPU-rail-design.png
    :alt: Network diagram - 6144-6912 GPU (768-864 Nodes), Rail design
 
 **Rail scalable unit - 6144-6912 GPU (768-864 Nodes)**
 
-.. image:: ../data/6k-gpu-toplogy-design-examples/network-diagram-6144-6912GPU-rail-scalable-unit.png
+.. image:: ./data/6k-gpu-toplogy-design-examples/network-diagram-6144-6912GPU-rail-scalable-unit.png
    :alt: Network diagram - 6144-6912 GPU (768-864 Nodes), Rail scalable unit
 
 6K GPU topology design examples 51.2T
@@ -557,22 +557,22 @@ with AMD Architecture as required.
 
 **Tree design - 6048 GPU (756 Nodes)**
 
-.. image:: ../data/6k-gpu-toplogy-design-examples/network-diagram-6048GPU-tree-design.png
+.. image:: ./data/6k-gpu-toplogy-design-examples/network-diagram-6048GPU-tree-design.png
    :alt: Network diagram - 6048 GPU (756 Nodes), Tree design
 
 **Tree scalable unit - 6048 GPU (756 Nodes)**
 
-.. image:: ../data/6k-gpu-toplogy-design-examples/network-diagram-6048GPU-tree-scalable-unit.png
+.. image:: ./data/6k-gpu-toplogy-design-examples/network-diagram-6048GPU-tree-scalable-unit.png
    :alt: Network diagram - 6048 GPU (756 Nodes), Tree scalable unit
 
 **Rail design - 6032 GPU (754 Nodes)**
 
-.. image:: ../data/6k-gpu-toplogy-design-examples/network-diagram-6032GPU-rail-design.png
+.. image:: ./data/6k-gpu-toplogy-design-examples/network-diagram-6032GPU-rail-design.png
    :alt: Network diagram - 6032 GPU (754 Nodes), Rail design
 
 **Rail scalable unit - 6032 GPU (754 Nodes)**
 
-.. image:: ../data/6k-gpu-toplogy-design-examples/network-diagram-6032GPU-rail-scalable-unit.png
+.. image:: ./data/6k-gpu-toplogy-design-examples/network-diagram-6032GPU-rail-scalable-unit.png
    :alt: Network diagram - 6032 GPU (754 Nodes), Rail scalable unit
 
 8K GPU topology design examples scheduled fabrics
@@ -580,61 +580,20 @@ with AMD Architecture as required.
 
 **Tree design - 8192 GPU (1024 Nodes)**
 
-.. image:: ../data/8k-gpu-toplogy-design-examples/network-diagram-8192GPU-tree-design.png
+.. image:: ./data/8k-gpu-toplogy-design-examples/network-diagram-8192GPU-tree-design.png
    :alt: Network diagram - 8192 GPU (1024 Nodes), Tree design
 
 **Tree scalable unit - 8192 GPU (1024 Nodes)**
 
-.. image:: ../data/8k-gpu-toplogy-design-examples/network-diagram-8192GPU-tree-scalable-unit.png
+.. image:: ./data/8k-gpu-toplogy-design-examples/network-diagram-8192GPU-tree-scalable-unit.png
    :alt: Network diagram - 8192 GPU (1024 Nodes), Tree scalable unit
 
 **Rail design - 8192-9216 GPU (1024-1152 Nodes)**
 
-.. image:: ../data/8k-gpu-toplogy-design-examples/network-diagram-8192-9216GPU-rail-design.png
+.. image:: ./data/8k-gpu-toplogy-design-examples/network-diagram-8192-9216GPU-rail-design.png
    :alt: Network diagram - 8192-9216 GPU (1024-1152 Nodes), Rail design
 
 **Rail scalable unit - 8192-9216 GPU (1024-1152 Nodes)**
 
-.. image:: ../data/8k-gpu-toplogy-design-examples/network-diagram-8192-9216GPU-rail-scalable-unit.png
+.. image:: ./data/8k-gpu-toplogy-design-examples/network-diagram-8192-9216GPU-rail-scalable-unit.png
    :alt: Network diagram - 8192-9216 GPU (1024-1152 Nodes), Rail scalable unit
-
-Legal information
-========================================================================================================================
-
-DISCLAIMER
-
-The information contained herein is for informational purposes only, and is subject to change without notice.
-While every precaution has been taken in the preparation of this document, it may contain technical inaccuracies,
-omissions and typographical errors, and AMD is under no obligation to update or otherwise correct this information.
-Advanced Micro Devices, Inc. makes no representations or warranties with respect to the accuracy or completeness of the
-contents of this document, and assumes no liability of any kind, including the implied warranties of noninfringement,
-merchantability or fitness for particular purposes, with respect to the operation or use of AMD hardware, software or
-other products described herein.  No license, including implied or arising by estoppel, to any intellectual property
-rights is granted by this document.  Terms and limitations applicable to the purchase or use of AMD's products are as
-set forth in a signed agreement between the parties or in AMD's Standard Terms and Conditions of Sale. GD-18 
-
-COMPLIANCE WITH LAWS
-
-Customer shall adhere to all applicable export laws and regulations including, without limitation, those
-administered by the U.S. Department of Commerce - Bureau of Industry and Security (U.S. Export Administration
-Regulations 15 CFR 730 et seq.) and those administered by the U.S. Department of State in accordance with the U.S.
-International Traffic in Arms Regulations (ITAR) set forth in Subchapter M, Title 22, Code of Federal Regulations, Parts
-120 through 130 (22 CFR 120-130), as the same may be amended from time to time, and shall not export, re-export, resell,
-transfer, or disclose, directly or indirectly, any Products or technical data, or the direct product of any Products or
-technical data, to any proscribed person, entity, or country, or foreign national thereof, unless properly authorized by
-the U.S. government and/or any other applicable or relevant government or regulatory body, including the export
-authorities of all respective countries. For the avoidance of doubt, Customer shall not use Products in, or re-export
-Products to Belarus, Russia and the Donetsk (DNR) or Luhansk (LNR) regions of Ukraine, regardless of the applicable
-export laws and regulations. Customer shall impose upon its customers terms at least as restrictive as those contained
-in this Clause 14 with respect to any sale, distribution or export of Products. 
-
-© 2025 Advanced Micro Devices, Inc. All
-rights reserved. AMD, the AMD Arrow logo, AMD Instinct, AMD together we advance\_, Infinity Fabric, ROCm, and
-combinations thereof are trademarks of Advanced Micro Devices, Inc. Amazon S3, Arista, Arista OSFP, APC, Broadcom,
-Ciena, Cisco, CloudVision, DataDirect Networks, Dell, DriveNets, EOS, FS.com, Hammerspace, Hewlett-Packard Enterprise, IOS,
-Juniper, JUNOS, Lenovo, Linux, MTP, Netshelter, Nokia, Proliant, Pure Storage, Schneider Electric, SONiC, Super Micro
-Computer Inc, Tomahawk, Ubuntu, Vast Data, Weka, and other product names used in this publication are for identification
-purposes only and may be trademarks of their respective owners. Certain AMD technologies may require third-party
-enablement or activation. Supported features may vary by operating system. Please confirm with the system manufacturer
-for specific features. No technology or product can be completely secure.
-

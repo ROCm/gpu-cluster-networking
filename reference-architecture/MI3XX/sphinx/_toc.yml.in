@@ -1,0 +1,9 @@
+# mi3xx-reference/sphinx/_toc.yml
+defaults:
+  numbered: False
+  maxdepth: 6
+root: index
+entries:
+  - file: overview
+    title: Overview    
+  - file: legal-information 
