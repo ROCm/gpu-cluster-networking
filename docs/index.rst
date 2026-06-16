@@ -28,11 +28,8 @@ and performance tests to ensure AMD Instinct™-powered GPU clusters achieve opt
 
    .. grid-item-card:: Reference
 
-      * :doc:`Hardware support <reference/hardware-support>`
-    
-   .. grid-item-card:: Design
+      * :doc:`Hardware support <reference/hardware-support>` 
 
-      * :doc:`MI3XX <design/mi3xx>`
 
 .. note::
 

@@ -1,0 +1,25 @@
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.10"
+  jobs:
+    post_checkout:
+      # Cancel the build if nothing in this docset changed (monorepo guard)
+      - |
+        if git diff --quiet origin/develop -- mi3xx-reference/; then
+          exit 183
+        fi
+python:
+  install:
+  # Shared across all docsets; dependabot tracks this single file (.github/dependabot.yml)
+  - requirements: docs/sphinx/requirements.txt
+
+sphinx:
+  configuration: mi3xx-reference/conf.py
+
+formats: [htmlzip]
