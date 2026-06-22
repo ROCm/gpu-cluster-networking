@@ -9,7 +9,7 @@ if os.environ.get("READTHEDOCS", "") == "True":
     html_context["READTHEDOCS"] = True
 
 project = "AMD Instinct Hub"
-html_title = "AMD Instinct MI3XX Reference"
+html_title = "AMD Instinct MI3XX Reference Design"
 author = "Advanced Micro Devices, Inc."
 copyright = "Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved."
 version = "1.0"
@@ -18,7 +18,7 @@ setting_all_article_info = False
 
 external_toc_path = "./sphinx/_toc.yml"
 
-external_projects_current_project = "mi3xx-reference"
+external_projects_current_project = "MI3XX-reference"
 
 html_theme = "rocm_docs_theme"
 html_theme_options = {
