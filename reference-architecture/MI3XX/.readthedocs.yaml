@@ -11,7 +11,7 @@ build:
     post_checkout:
       # Cancel the build if nothing in this docset changed (monorepo guard)
       - |
-        if git diff --quiet origin/develop -- mi3xx-reference/; then
+        if git diff --quiet origin/develop -- reference-architecture/MI3XX/; then
           exit 183
         fi
 python:
@@ -20,6 +20,6 @@ python:
   - requirements: docs/sphinx/requirements.txt
 
 sphinx:
-  configuration: mi3xx-reference/conf.py
+  configuration: reference-architecture/MI3XX/conf.py
 
 formats: [htmlzip]
