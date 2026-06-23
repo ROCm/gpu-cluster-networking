@@ -7,7 +7,19 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
-
+  jobs:
+    post_checkout:
+      # Monorepo guard: cancel the build unless this change touched docs/
+      - git fetch origin develop --depth 1 || true
+      - |
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ]; then
+          BASE=origin/develop   # PR build: compare against the develop base
+        else
+          BASE=HEAD^            # branch/tag build (latest): compare against previous commit
+        fi
+        if git diff --quiet "$BASE" HEAD -- docs/; then
+          exit 183
+        fi
 python:
   install:
   - requirements: docs/sphinx/requirements.txt
