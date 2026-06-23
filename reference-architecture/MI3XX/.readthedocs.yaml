@@ -9,9 +9,15 @@ build:
     python: "3.10"
   jobs:
     post_checkout:
-      # Cancel the build if nothing in this docset changed (monorepo guard)
+      # Monorepo guard: cancel the build unless this change touched reference-architecture/MI3XX/
+      - git fetch origin develop --depth 1 || true
       - |
-        if git diff --quiet origin/develop -- reference-architecture/MI3XX/; then
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ]; then
+          BASE=origin/develop   # PR build: compare against the develop base
+        else
+          BASE=HEAD^            # branch/tag build (latest): compare against previous commit
+        fi
+        if git diff --quiet "$BASE" HEAD -- reference-architecture/MI3XX/; then
           exit 183
         fi
 python:
