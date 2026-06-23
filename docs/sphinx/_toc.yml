@@ -3,10 +3,6 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
-- caption: Design
-  entries:
-  - file: design/mi3xx
-    title: MI3XX
 - caption: How to
   entries:
   - file: how-to/gpu-enabled-mpi
@@ -25,3 +21,5 @@ subtrees:
   entries:
   - file: reference/hardware-support
     title: Hardware support
+  - file: reference/cluster-design
+    title: Cluster design

@@ -21,3 +21,5 @@ subtrees:
   entries:
   - file: reference/hardware-support
     title: Hardware support
+  - file: reference/cluster-design
+    title: Cluster design
