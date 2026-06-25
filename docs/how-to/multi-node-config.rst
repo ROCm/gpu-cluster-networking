@@ -30,8 +30,8 @@ Before following the steps in this guide, complete the following prerequisites.
 Evaluate platform-specific BIOS tunings
 ------------------------------------------------------------------------------------------------------------------------
 
-Check your BIOS settings to make sure they are optimized for AMD GPUs. See the `AMD Instinct system optimization
-guides <https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/index.html>`_ for more
+Check your BIOS settings to make sure they are optimized for AMD GPUs. See the `Instinct Customer Acceptance Guide
+<https://instinct.docs.amd.com/projects/system-acceptance/en/latest/>`_ for more
 information.
 
 * Enable large bar addressing in the BIOS to support peer to peer GPU memory access.

@@ -163,8 +163,8 @@ between NICs and GPUs functions as expected.
 To disable ACS, use the `disable ACS script
 <https://github.com/ROCm/cluster-networking/blob/main/general_scripts/dis_acs.sh>`_ provided on the cluster networking
 github. To set IOMMU passthrough on a Linux system, add ``iommu=pt`` to the ``GRUB_CMDLINE_LINUX_DEFAULT`` entry in
-``/etc/default/grub``, then run ``sudo update-grub``. You can see a more detailed flow at `GRUB settings
-<https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/mi300x.html#mi300x-grub-settings>`_
+``/etc/default/grub``, then run ``sudo update-grub``. You can see a more detailed flow at `Kernel Parameters
+<https://instinct.docs.amd.com/projects/system-acceptance/en/latest/common/kernel-parameters.html>`_
 and :ref:`rocm-install-on-linux:multi-gpu`.
 
 Enable DCQCN through QoS configuration
