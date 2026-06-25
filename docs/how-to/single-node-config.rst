@@ -78,8 +78,8 @@ Before following the steps in the following sections, ensure you have completed 
 
    c. Run ``sudo cat /proc/cmdline`` to verify grub command line settings. 
 
-   d. See `GRUB settings
-      <https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/mi300x.html#mi300x-grub-settings>`_
+   d. See `Kernel Parameters
+      <https://instinct.docs.amd.com/projects/system-acceptance/en/latest/common/kernel-parameters.html>`_
       and :ref:`rocm-install-on-linux:multi-gpu` for more information.
 
 #. Verify group permissions.

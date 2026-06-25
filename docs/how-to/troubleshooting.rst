@@ -413,8 +413,8 @@ Low performance is the most observable indicator of BIOS misconfiguration, but c
 best approach to this issue one of prevention by ensuring your system BIOS is in alignment with AMD's optimization
 guides:
 
-* For MI3XX systems - `AMD Instinct MI300X system optimization <https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/mi300x.html#mi300x-bios-settings>`_
-* For MI2XX systems - `AMD Instinct MI200 system optimization <https://instinct.docs.amd.com/projects/amdgpu-docs/en/latest/system-optimization/mi200.html#system-bios-settings>`_  
+* For MI3XX systems - `AMD Instinct MI300X Customer Acceptance Guide <https://instinct.docs.amd.com/projects/system-acceptance/en/latest/gpus/mi300x.html#mi300x-bios-settings>`_
+* For MI2XX systems - `AMD Instinct MI200 Customer Acceptance Guide <https://instinct.docs.amd.com/projects/system-acceptance/en/latest/gpus/mi250.html#system-bios-settings>`_  
 
 .. _ACS-disabled-baremetal:
 
