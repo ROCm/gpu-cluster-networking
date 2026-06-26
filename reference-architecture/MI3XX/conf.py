@@ -8,7 +8,6 @@ html_context = {}
 if os.environ.get("READTHEDOCS", "") == "True":
     html_context["READTHEDOCS"] = True
 
-project = "AMD Instinct Hub"
 html_title = "AMD Instinct MI3XX Reference Design"
 author = "Advanced Micro Devices, Inc."
 copyright = "Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved."
@@ -19,18 +18,25 @@ setting_all_article_info = False
 external_toc_path = "./sphinx/_toc.yml"
 
 external_projects_current_project = "MI3XX-reference"
+external_projects_remote_repository = ""
 
 html_theme = "rocm_docs_theme"
 html_theme_options = {
     "flavor": "instinct",
-    "show_toc_level": 1,
+    "show_toc_level": 2,
     "navbar_align": "content",
     "link_main_doc": True,
     "use_download_button": True,
 }
 extensions = ["rocm_docs"]
 
+# Configure static files path
 html_static_path = ['_static']
+
+# Disable sidebars to handle minimal TOC
+html_sidebars = {
+    "**": []
+}
 
 html_extra_path = ["llms.txt"]
 
