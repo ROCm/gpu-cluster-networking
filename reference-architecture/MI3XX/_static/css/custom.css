@@ -1,31 +1,7 @@
-/* Network troubleshooting page */
-
-/* Custom width for rccl errors table */
-table.rccl-errors {
-    table-layout: fixed !important;
-    width: 100% !important;
-}
-table.rccl-errors th:nth-child(1),
-table.rccl-errors td:nth-child(1) {
-    width: 40% !important;
-}
-table.rccl-errors th:nth-child(2),
-table.rccl-errors td:nth-child(2) {
-    width: 60% !important;
-}
-
-/* Custom width for rdma errors table */
-table.rdma-errors {
-    table-layout: fixed !important;
-    width: 100% !important;
-}
-table.rdma-errors th:nth-child(1),
-table.rdma-errors td:nth-child(1) {
-    width: 40% !important;
-}
-table.rdma-errors th:nth-child(2),
-table.rdma-errors td:nth-child(2) {
-    width: 60% !important;
+/* Hide the primary sidebar toggle (carat) only when the primary sidebar is
+   empty. */
+.bd-container__inner:has(.bd-sidebar-primary.hide-on-wide) .sidebar-toggle.primary-toggle {
+    display: none;
 }
 
 /* Remove white background from topology diagrams in dark mode */
@@ -41,5 +17,17 @@ html[data-theme=dark] .bd-content img:not(.only-dark,.dark-light) {
 /* Add neutral grey background for images in light mode */
 html:not([data-theme=dark]) .bd-content img {
     background-color: #777 !important;
+}
+
+/* Shrink the Legal information section heading */
+  #legal-information > h2 {
+      font-size: 1rem;
+  }
+
+  /* Render the Legal information body text smaller (see .. container:: legal-text
+   in index.rst) */
+.legal-text {
+    font-size: 0.65rem;
+    line-height: 1.4;
 }
 

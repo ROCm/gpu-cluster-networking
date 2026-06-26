@@ -1,0 +1,19 @@
+# AMD Instinct MI3XX Reference Design
+
+> A common reference for designing GPU cluster networks using AMD Instinct MI300X, MI325X, MI350X, and MI355X series accelerators, supporting up to 8192 GPUs. Covers cluster design principles, network topologies, scalable architectures, subscription ratios, power requirements, and bill of materials for large-scale deployments, including fat tree and rail network designs with diagrams and best practices for high-performance AI/ML workloads.
+
+## Topics
+
+- [Common cluster design principles](https://instinct.docs.amd.com/projects/MI3XX-reference/en/latest/index.html#common-cluster-design-principles): Fat tree and rail network topologies, how each connects hosts to upstream switches, and a comparison of their latency and cross-rail/cross-rank traffic trade-offs.
+- [Basic network topologies](https://instinct.docs.amd.com/projects/MI3XX-reference/en/latest/index.html#basic-network-topologies): Building-block layouts for 2-tier and 3-tier rail, tree, hybrid rail, and fully scheduled rail networks, including TH5/J3 and rail-optimized variants.
+- [Scaling networks](https://instinct.docs.amd.com/projects/MI3XX-reference/en/latest/index.html#scaling-networks): When spine and super-spine switches are required as cluster size grows across 2-tier and 3-tier tree, rail, and hybrid designs.
+- [Network subscription](https://instinct.docs.amd.com/projects/MI3XX-reference/en/latest/index.html#network-subscription): Subscription ratios and rates that relate downstream demand to upstream capacity, including over- and undersubscription.
+- [Hardware and software components](https://instinct.docs.amd.com/projects/MI3XX-reference/en/latest/index.html#hardware-and-software-components): Generic bill of materials for 128–1024 and 1024–8192 GPU cluster and network designs, covering platforms, OS, ROCm, storage, NICs, switches, optics, and fabric.
+- [Power requirements](https://instinct.docs.amd.com/projects/MI3XX-reference/en/latest/index.html#power-requirements): Power design assumptions for a 4MW, 2K MI355X GPU cluster with 51.2T or scheduled fabric switch options.
+- [Network design examples](https://instinct.docs.amd.com/projects/MI3XX-reference/en/latest/index.html#network-design-examples): Topology design diagrams for tree and rail designs from 128 to 8192 GPUs using Jericho/Ramon scheduled fabrics or 51.2T switches.
+
+## Legal
+
+- [Legal information](https://instinct.docs.amd.com/projects/MI3XX-reference/en/latest/index.html#legal-information): Disclaimer, compliance with export laws, and trademark notices.
+
+---
