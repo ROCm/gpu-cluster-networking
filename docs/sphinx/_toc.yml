@@ -3,6 +3,9 @@ defaults:
   maxdepth: 6
 root: index
 subtrees:
+- entries:
+  - file: overview.rst
+    title: Overview
 - caption: How to
   entries:
   - file: how-to/gpu-enabled-mpi

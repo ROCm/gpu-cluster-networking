@@ -22,7 +22,7 @@ external_projects_remote_repository = ""
 
 html_theme = "rocm_docs_theme"
 html_theme_options = {
-    "flavor": "instinct",
+    "flavor": "instinct-design",
     "show_toc_level": 2,
     "navbar_align": "content",
     "link_main_doc": True,

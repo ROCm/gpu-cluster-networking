@@ -1,3 +1,39 @@
+/* Disable the instinct-design theme's scroll-reveal animation: its JS sets
+   sections to opacity:0 until scrolled into view, which makes long pages
+   appear to "load in" on scroll. Force all sections fully visible so the
+   whole page renders at once (matching the old "instinct" flavor). */
+.bd-main section[id] {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* Truncate landing-page tile text so long titles/descriptions don't make
+   cards uneven: clamp to a fixed number of lines with a trailing ellipsis. */
+.id-card-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.id-card-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hide the primary sidebar toggle (carat) only when the primary sidebar is
+   empty. The theme adds `hide-on-wide` to the sidebar exactly when it has no
+   content (see pydata_sphinx_theme layout.html: `{% if not sidebars %}`), so
+   restoring a primary sidebar automatically brings the toggle back. */
+.bd-container__inner:has(.bd-sidebar-primary.hide-on-wide) .sidebar-toggle.primary-toggle {
+    display: none;
+}
+    
 /* Network troubleshooting page */
 
 /* Custom width for rccl errors table */

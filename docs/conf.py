@@ -8,10 +8,9 @@ html_context = {}
 if os.environ.get("READTHEDOCS", "") == "True":
     html_context["READTHEDOCS"] = True
 
-project = "AMD Instinct Hub"
-html_title = "GPU cluster networking documentation"
+html_title = "Cluster Documentation Hub"
 author = "Advanced Micro Devices, Inc."
-copyright = "Copyright (c) 2024 Advanced Micro Devices, Inc. All rights reserved."
+copyright = "Copyright (c) 2026 Advanced Micro Devices, Inc. All rights reserved."
 version = "0.1.0"
 release = version
 setting_all_article_info = False
@@ -22,13 +21,18 @@ external_projects_current_project = "gpu-cluster-networking"
 
 html_theme = "rocm_docs_theme"
 html_theme_options = {
-    "flavor": "instinct",
+    "flavor": "instinct-design",
     "link_main_doc": True,
     "use_download_button": True,
 }
 extensions = ["rocm_docs"]
 
 html_static_path = ['_static']
+
+# Disable the sidebar on the landing page only; other pages keep the theme default
+html_sidebars = {
+    "index": []
+}
 
 html_extra_path = ["llms.txt"]
 
