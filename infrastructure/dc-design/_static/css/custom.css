@@ -1,0 +1,41 @@
+/* Disable the instinct-design theme's scroll-reveal animation: its JS sets
+   sections to opacity:0 until scrolled into view, which makes long pages
+   appear to "load in" on scroll. Force all sections fully visible so the
+   whole page renders at once (matching the old "instinct" flavor). */
+.bd-main section[id] {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* Hide the primary sidebar toggle (carat) only when the primary sidebar is
+   empty. */
+.bd-container__inner:has(.bd-sidebar-primary.hide-on-wide) .sidebar-toggle.primary-toggle {
+    display: none;
+}
+
+/* Remove white background from topology diagrams in dark mode */
+html[data-theme=dark] .bd-content img {
+    background-color: transparent !important;
+}
+
+/* Restore normal brightness for images in dark mode */
+html[data-theme=dark] .bd-content img:not(.only-dark,.dark-light) {
+    filter: brightness(1) contrast(1) !important;
+}
+
+/* Add neutral grey background for images in light mode */
+html:not([data-theme=dark]) .bd-content img {
+    background-color: #777 !important;
+}
+
+/* Shrink the Legal information section heading */
+  #legal-information > h2 {
+      font-size: 1rem;
+  }
+
+  /* Render the Legal information body text smaller (see .. container:: legal-text
+   in index.rst) */
+.legal-text {
+    font-size: 0.65rem;
+    line-height: 1.4;
+}

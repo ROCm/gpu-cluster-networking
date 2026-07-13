@@ -1,0 +1,31 @@
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.10"
+  jobs:
+    post_checkout:
+      # Monorepo guard: cancel the build unless this change touched infrastructure/dc-design/
+      # Fetch develop's history (not just its tip) so the common ancestor with
+      # this branch is reachable, then review every commit since that ancestor.
+      - git fetch origin develop || true
+      - |
+        BASE=$(git merge-base origin/develop HEAD || true)
+        # Fail open: if no common ancestor is found (e.g. develop history not
+        # fetched on a PR build), build rather than risk cancelling wrongly.
+        if [ -n "$BASE" ] && git diff --quiet "$BASE" HEAD -- infrastructure/dc-design/; then
+          exit 183
+        fi
+python:
+  install:
+  # Shared across all docsets; dependabot tracks this single file (.github/dependabot.yml)
+  - requirements: docs/sphinx/requirements.txt
+
+sphinx:
+  configuration: infrastructure/dc-design/conf.py
+
+formats: [htmlzip]
