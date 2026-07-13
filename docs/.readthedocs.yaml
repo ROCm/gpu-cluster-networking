@@ -10,14 +10,14 @@ build:
   jobs:
     post_checkout:
       # Monorepo guard: cancel the build unless this change touched docs/
-      - git fetch origin develop --depth 1 || true
+      # Fetch develop's history (not just its tip) so the common ancestor with
+      # this branch is reachable, then review every commit since that ancestor.
+      - git fetch origin develop || true
       - |
-        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ]; then
-          BASE=origin/develop   # PR build: compare against the develop base
-        else
-          BASE=HEAD^            # branch/tag build (latest): compare against previous commit
-        fi
-        if git diff --quiet "$BASE" HEAD -- docs/; then
+        BASE=$(git merge-base origin/develop HEAD || true)
+        # Fail open: if no common ancestor is found (e.g. develop history not
+        # fetched on a PR build), build rather than risk cancelling wrongly.
+        if [ -n "$BASE" ] && git diff --quiet "$BASE" HEAD -- docs/; then
           exit 183
         fi
 python:
