@@ -86,9 +86,7 @@ blast radius compared to rail networks.
 3-tier rail TH5/J3 network
 ------------------------------------------------------------------------------------------------------------------------
 
-In the 3-tier rail TH5/J3 network design, spine switches replaces a two-tier Jericho3-AI/Ramon3 fabric to
-enable a larger maximum cluster size, where deeper buffers and scheduled fabric help alleviate congestion in large
-clusters with only a small latency trade-off. 
+In the 3-tier rail TH5/J3 network design, a two-tier Jericho3-AI/Ramon3 fabric replaces the spine switches to enable a larger maximum cluster size, where deeper buffers and scheduled fabric help alleviate congestion in large clusters with only a small latency trade-off. 
 
 3-tier tree TH5/J3 network
 ------------------------------------------------------------------------------------------------------------------------
