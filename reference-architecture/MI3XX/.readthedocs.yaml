@@ -14,9 +14,12 @@ build:
       # this branch is reachable, then review every commit since that ancestor.
       - git fetch origin develop || true
       - |
-        BASE=$(git merge-base origin/develop HEAD || true)
-        # Fail open: if no common ancestor is found (e.g. develop history not
-        # fetched on a PR build), build rather than risk cancelling wrongly.
+        if [ "$READTHEDOCS_VERSION_TYPE" = "external" ]; then
+          BASE=$(git merge-base origin/develop HEAD || true)   # PR build: compare against the develop base
+        else
+          BASE=$(git rev-parse HEAD^ || true)                  # branch/latest build: compare against previous commit
+        fi
+        # Fail open: if no base is found, build rather than risk cancelling wrongly.
         if [ -n "$BASE" ] && git diff --quiet "$BASE" HEAD -- reference-architecture/MI3XX/; then
           exit 183
         fi
