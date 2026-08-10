@@ -1,5 +1,5 @@
-* @mbenavidez-amd @nithya-soundar24 @rzimmer512
-# Documentation files
-docs/ @mbenavidez-amd @nithya-soundar24 @rzimmer512
-*.md @mbenavidez-amd @nithya-soundar24 @rzimmer512
-*.rst @mbenavidez-amd @nithya-soundar24 @rzimmer512
+# Code ownership and required reviews are enforced via repository rulesets,
+# not via this file.
+#
+# See: Settings → Rules → Rulesets for the branch protection and
+# required-reviewer configuration of target branches.
