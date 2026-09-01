@@ -474,12 +474,13 @@ Perform these steps on the monitoring node.
       restart: unless-stopped
 
    influxdb:
-      image: influxdb:1.11.8
+      image: influxdb:1.12.4
       container_name: influxdb
       ports:
          - "8086:8086"
       environment:
          - INFLUXDB_DB=k6
+         - INFLUXDB_HTTP_AUTH_ENABLED=true
          - INFLUXDB_ADMIN_USER=admin
          - INFLUXDB_ADMIN_PASSWORD=admin
       volumes:
@@ -498,6 +499,10 @@ Perform these steps on the monitoring node.
       depends_on:
          - prometheus
       restart: unless-stopped
+   ```
+
+   ```{note}
+   Change the default InfluxDB and Grafana admin usernames and passwords before running this stack anywhere beyond your own workstation.
    ```
 
 4. Create `prometheus/prometheus.yml` to configure metrics collection:
