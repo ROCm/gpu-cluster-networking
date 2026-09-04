@@ -8,13 +8,17 @@ AMD Instinct MI3XX Reference Design
 
 This document provides a common reference for designing GPU cluster networks using AMD Instinct MI300X, MI325X, MI350X,
 and MI355X series accelerators, supporting up to 8192 GPUs. It covers fundamental cluster design principles, network
-topologies, scalable architectures, and bill of materials for large-scale deployments. Also included are practical
+topologies, scalable architectures, and bill of materials for large-scale deployments. It also includes practical
 examples, diagrams, and recommendations for both fat tree and rail network designs, as well as guidance on scaling,
-hardware selection, and best practices for high-performance AI/ML workloads. The audience for this content encompasses
+hardware selection, and best practices for high-performance AI/ML workloads. The audience for this content targets
 architects, engineers, and IT professionals.
 
 Common cluster design principles
 ========================================================================================================================
+
+This section introduces the foundational network topology concepts that shape the GPU cluster design. Understanding the trade-offs
+between fat tree and rail network approaches is essential for selecting an architecture that aligns with the performance requirements and communication patterns of AI/ML workloads.
+
 
 Fat tree network topologies
 ------------------------------------------------------------------------------------------------------------------------
@@ -30,10 +34,8 @@ generally a 3-stage or 5-stage folded Clos network due to the fixed radix of net
 Rail network topologies
 ------------------------------------------------------------------------------------------------------------------------
 
-Rail networks leverage the same folded Clos network as tree networks, but host connections are instead aggregated onto
-switches based on NIC rank. These shared ranks are referred to as rails and allow the network to provide preferential
-latency for connections which share the same rail. The downside to this design is any traffic which needs to cross
-rails/ranks must traverse either the network spine layer, or Infinity Fabric (PXN). 
+Rail networks leverage the same folded Clos network as tree networks, but switches aggregate host connections based on NIC rank. These shared ranks are called rails and allow the network to provide preferential
+latency for connections which share the same rail. The downside to this design is any traffic crossing rails/ranks must traverse either the network spine layer, or Infinity Fabric (PXN). 
 
 Comparison between fat tree and rail networks
 ------------------------------------------------------------------------------------------------------------------------
@@ -51,8 +53,8 @@ contained within a single rail in a rail network.
 .. image:: ./data/basic-network-topology-design-examples/cross-rank-traffic-tree.png
    :alt: Example of benefits and limitations of fat tree network traversals
 
-The choice between the two often depends on the specific workload and communication patterns of the applications being
-run on the cluster.
+The choice between the two often depends on the specific workload and communication patterns of the applications 
+running on the cluster.
 
 Basic network topologies
 ========================================================================================================================
@@ -75,7 +77,7 @@ to the need for additional networking hardware.
 ------------------------------------------------------------------------------------------------------------------------
 
 The 2-tier tree network design is efficient for small workloads or replicas and can easily scale by adding capacity with
-proper planning. It also has the potential to reduce overall infrastructure costs, while its design helps limit the
+proper planning. It can also reduce overall infrastructure costs, while its design helps limit the
 blast radius compared to rail networks.
 
 .. image:: ./data/basic-network-topology-design-examples/2-tier-tree-network.png
@@ -84,9 +86,7 @@ blast radius compared to rail networks.
 3-tier rail TH5/J3 network
 ------------------------------------------------------------------------------------------------------------------------
 
-In the 3-tier rail TH5/J3 network design, spine switches are replaced with a two-tier Jericho3-AI/Ramon3 fabric to
-enable a larger maximum cluster size, where deeper buffers and scheduled fabric help alleviate congestion in large
-clusters with only a small latency trade-off. 
+In the 3-tier rail TH5/J3 network design, a two-tier Jericho3-AI/Ramon3 fabric replaces the spine switches to enable a larger maximum cluster size, where deeper buffers and scheduled fabric help alleviate congestion in large clusters with only a small latency trade-off. 
 
 3-tier tree TH5/J3 network
 ------------------------------------------------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ well-suited for campus-style deployments that balance scalability with broad con
 3-tier fully scheduled rail network
 ------------------------------------------------------------------------------------------------------------------------
 
-The 3-Tier fully scheduled rail network designuses medium-sized scalable units and delivers excellent congestion
+The 3-Tier fully scheduled rail network design uses medium-sized scalable units and delivers excellent congestion
 performance thanks to deep buffers and scheduled fabric, though technical limitations restrict the recommended cluster
 size to roughly 32,000 GPUs.
 
@@ -149,7 +149,7 @@ In a 3-tier network, a tree design does not require a super spine until a super-
 .. image:: ./data/basic-network-topology-design-examples/3-tier-network-backend-scaling.png
     :alt: Example of network backend scaling for 3-tier network design
 
-This holds true for hybrid rail as well, where the super spine is only needed at super-scalable unit deployments, but a
+This holds true for hybrid rail as well, which only requires a super spine at super-scalable unit deployments, but a
 fully scheduled rail network requires a super spine from the initial deployment.
 
 .. image:: ./data/basic-network-topology-design-examples/3-tier-network-backend-deploy-rail.png
@@ -158,8 +158,7 @@ fully scheduled rail network requires a super spine from the initial deployment.
 Network subscription
 ========================================================================================================================
 
-Subscription is the relationship between what is provided by the upstream network and what is required by the downstream
-network in demand side. 
+Subscription describes the ratio between upstream capacity and downstream demand. 
 
 It is typically represented as a ratio: 
 
@@ -176,11 +175,15 @@ This can also be represented as a percentage:
    
    Subscription Rate =  \frac{Downstream Demand}{Upstream Capacity} 
 
-An 80% subscription ratio could be referred to as "20% undersubscribed", or a 120% subscription ratio could be referred
+An 80% subscription ratio is called "20% undersubscribed", or a 120% subscription ratio could be referred
 to as "20% oversubscribed".
 
 Hardware and software components
 ========================================================================================================================
+
+The following tables provide generic bill of materials (BOMs) for cluster and network designs across a range of GPU counts. 
+Use these selections as a starting point — vendor availability, workload requirements, and site constraints will shape the final 
+configuration.
 
 128 to 1024 GPU generic BOM
 ------------------------------------------------------------------------------------------------------------------------
@@ -330,6 +333,10 @@ requirements.
 Power requirements
 ========================================================================================================================
 
+Accurate power planning is critical to ensuring reliable cluster operation and avoiding infrastructure bottlenecks. The estimates 
+below cover compute, network switching, and storage management components for representative cluster configurations. All values are 
+design assumptions based on typical hardware specifications; consult vendor data sheets for precise figures.
+
 MI355X 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -375,11 +382,11 @@ environmental conditions.
 Network design examples
 ========================================================================================================================
 
-Designs included are based on either Jericho or Ramon switch types (Arista, Ciena, Nokia) or 51.2T switch types (Arista,
+The designs use either Jericho or Ramon switch types (Arista, Ciena, Nokia) or 51.2T switch types (Arista,
 Cisco, Dell, Juniper). Vendors and switch models vary for port count and features; please consult your desired vendor's
 port count directly to confirm.
 
-The diagrams presented in this section are designed around a scalable unit or POD, which can determine overall network
+The diagrams in this section are organized around a scalable unit or POD, which can determine overall network
 end to end latency and AI use cases. Certain ML/AI workloads may require a change of scalable unit size. Please consult
 with AMD Architecture as required.
 
