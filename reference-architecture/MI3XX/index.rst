@@ -210,7 +210,7 @@ requirements.
 +==================+=========================+
 | Local storage    | 1.6 TB (or greater)     |
 +------------------+-------------------------+
-| Utility storage  | Pure, Vast         |
+| Utility storage  | Pure, Vast              |
 +------------------+-------------------------+
 | Bulk storage     | Vast, DDN, WekaIO       |
 +------------------+-------------------------+
@@ -283,7 +283,7 @@ requirements.
 +==================+=========================+
 | Local storage    | 1.6 TB (or greater)     |
 +------------------+-------------------------+
-| Utility storage  | Pure, Vast     |
+| Utility storage  | Pure, Vast              |
 +------------------+-------------------------+
 | Bulk storage     | Vast, DDN, WekaIO       |
 +------------------+-------------------------+
