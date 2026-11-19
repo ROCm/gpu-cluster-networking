@@ -17,5 +17,5 @@ on:
 jobs:
   call-workflow-passing-data:
     name: Documentation
-    uses: ROCm/rocm-docs-core/.github/workflows/linting.yml@6d55bede5b653cf7a594862ee4cfbf7c362db9f8
+    uses: ROCm/rocm-docs-core/.github/workflows/linting.yml@804b2648fd9026ba00ab16d930e07ca015eda3f9
 
